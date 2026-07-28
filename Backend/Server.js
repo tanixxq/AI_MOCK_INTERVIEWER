@@ -5,6 +5,10 @@ import dotenv from "dotenv";
 import {register} from "./Controllers/authControllers.js";
 import AuthRoutes from "./Routes/AuthRoutes.js";
 import UserRoutes from "./Routes/UserRoutes.js";
+import InterviewRoutes from "./Routes/interviewRoutes.js";
+
+
+
 
 
 dotenv.config();
@@ -15,6 +19,7 @@ const app = express();
 app.use(express.json());
 app.use("/api/auth", AuthRoutes);
 app.use("/api/user", UserRoutes);
+app.use("/api/interview", InterviewRoutes);
 
 
 app.listen(3000,()=>{
