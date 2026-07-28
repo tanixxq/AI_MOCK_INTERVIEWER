@@ -15,6 +15,7 @@ const app = express();
 app.use(express.json());
 app.use("/api/auth", AuthRoutes);
 app.use("/api/user", UserRoutes);
+app.use("/api/auth", AuthRoutes);
 
 app.listen(3000,()=>{
     console.log("Servers started on port 3000");
