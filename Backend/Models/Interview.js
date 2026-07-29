@@ -31,9 +31,22 @@ const interviewSchema = new mongoose.Schema(
 
         questions:[
             {
-                question:String,
-                answer:String,
-                feedback:String
+                question:{
+                    type:String,
+                    required:true
+                },
+                answer:{
+                    type:String,
+                    default:""
+                },
+                feedback:{
+                    type:String,
+                    default:""
+                },
+                score:{
+                    type:Number,
+                    default:0
+                }
             }
         ]
 

@@ -1,5 +1,5 @@
 import { Interview } from "../Models/Interview.js";
-import { generateInterviewQuestions } from "../Services/aiServices.js";
+import { generateInterviewQuestions, evaluateAnswer } from "../Services/aiServices.js";
 
 
 export const createInterview = async (req, res) => {
@@ -95,6 +95,13 @@ export const SubmitAnswer = async (req,res)=>{
             })
         }
         interview.questions[questionIndex].answer = answer;
+
+        const evaluation = await evaluateAnswer(
+            interview.questions[questionIndex].question,answer);
+
+        interview.questions[questionIndex].feedback = evaluation.feedback;
+        interview.questions[questionIndex].score = evaluation.score;
+
         await interview.save();
 
         res.status(200).json({
