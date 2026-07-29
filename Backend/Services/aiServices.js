@@ -1,18 +1,16 @@
-import { GoogleGenAI } from "@google/genai";
+import Groq from "groq-sdk";
 
-console.log("Gemini Key Exists:", !!process.env.GEMINI_API_KEY);
-
-const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY,
+const groq = new Groq({
+apiKey:process.env.GROQ_API_KEY
 });
 
-export const generateInterviewQuestions = async (
-    skills,
-    difficulty,
-    experience
-) => {
-    try {
-        const prompt = `
+export const generateInterviewQuestions=async(
+skills,
+difficulty,
+experience
+)=>{
+try{
+const prompt=`
 Generate exactly 10 interview questions.
 
 Skills: ${skills.join(",")}
@@ -27,91 +25,97 @@ Rules:
 
 Example:
 [
-  "Question 1",
-  "Question 2"
+"Question 1",
+"Question 2"
 ]
 `;
 
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: prompt,
-        });
+const response=await groq.chat.completions.create({
+model:"llama-3.3-70b-versatile",
+messages:[
+{
+role:"user",
+content:prompt
+}
+],
+temperature:0.7
+});
 
-        const text = response.text.trim();
+const text=response.choices[0].message.content.trim();
 
-        return JSON.parse(text);
+return JSON.parse(text);
 
-    } catch (error) {
-        console.error("Gemini Error:", error);
-        throw new Error("Failed to generate interview questions");
-    }
+}catch(error){
+console.error("Groq Error:",error);
+throw new Error("Failed to generate interview questions");
+}
 };
 
+export const evaluateAnswer=async(question,answer)=>{
+try{
+const prompt=`
+You are an experienced technical interviewer.
 
-export const evaluateAnswer = async (question, answer) => {
-    try {
-        const prompt = `
-        You are an experienced technical interviewer.
-        
-        Evaluate the candidate's answer based on:
-        - Technical correctness
-        - Understanding of the concept
-        - Relevance to the question
-        - Clarity of explanation
-        
-        Important:
-        - Do NOT judge the answer based on length.
-        - Short answers can receive high scores if they demonstrate correct understanding.
-        - Evaluate like a real human interviewer.
-        - Do not expect every possible keyword.
-        - Give lower scores only if important concepts are missing or the answer is incorrect.
-        
-        Question:
-        ${question}
-        
-        Candidate Answer:
-        ${answer}
-        
-        Return ONLY valid JSON.
-        
-        Format:
-        {
-          "score": 8,
-          "feedback": "Your feedback here"
-        }
-        `;
+Evaluate the candidate's answer based on:
+- Technical correctness
+- Understanding of the concept
+- Relevance to the question
+- Clarity of explanation
 
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: prompt,
-        });
+Important:
+- Do NOT judge the answer based on length.
+- Short answers can receive high scores if they demonstrate correct understanding.
+- Evaluate like a real human interviewer.
+- Do not expect every possible keyword.
+- Give lower scores only if important concepts are missing or the answer is incorrect.
 
-        const text = response.text
-            .replace(/```json/g, "")
-            .replace(/```/g, "")
-            .replace(/\n/g, " ")
-            .trim();
+Question:
+${question}
 
-        const jsonStart = text.indexOf("{");
-        const jsonEnd = text.lastIndexOf("}") + 1;
+Candidate Answer:
+${answer}
 
-        const jsonText = text.substring(jsonStart, jsonEnd);
+Return ONLY valid JSON.
 
-        return JSON.parse(text);
+Format:
+{
+"score":8,
+"feedback":"Your feedback here"
+}
+`;
 
-    } catch (error) {
-        console.error("Gemini Evaluation Error:", error);
-        throw new Error("Failed to evaluate answer");
-    }
+const response=await groq.chat.completions.create({
+model:"llama-3.3-70b-versatile",
+messages:[
+{
+role:"user",
+content:prompt
+}
+],
+temperature:0.3
+});
+
+const text=response.choices[0].message.content
+.replace(/```json/g,"")
+.replace(/```/g,"")
+.replace(/\n/g," ")
+.trim();
+
+const jsonStart=text.indexOf("{");
+const jsonEnd=text.lastIndexOf("}")+1;
+const jsonText=text.substring(jsonStart,jsonEnd);
+
+return JSON.parse(jsonText);
+
+}catch(error){
+console.error("Groq Evaluation Error:",error);
+throw new Error("Failed to evaluate answer");
+}
 };
 
-export const generateInterviewSummary = async (questions) => {
-    try {
-        const ai = new GoogleGenAI({
-            apiKey: process.env.GEMINI_API_KEY,
-        });
-
-        const prompt = `
+export const generateInterviewSummary=async(questions)=>{
+try{
+const prompt=`
 You are a senior technical interviewer.
 
 Analyze the complete interview performance.
@@ -131,16 +135,16 @@ Return ONLY valid JSON.
 
 Format:
 {
-    "overallScore": 8,
-    "summary": "Overall interview performance summary",
-    "strengths": [
-        "Strength 1",
-        "Strength 2"
-    ],
-    "improvements": [
-        "Improvement 1",
-        "Improvement 2"
-    ]
+"overallScore":8,
+"summary":"Overall interview performance summary",
+"strengths":[
+"Strength 1",
+"Strength 2"
+],
+"improvements":[
+"Improvement 1",
+"Improvement 2"
+]
 }
 
 Rules:
@@ -149,26 +153,31 @@ Rules:
 - Consider technical correctness and understanding.
 `;
 
-        const response = await ai.models.generateContent({
-            model:"gemini-2.5-flash",
-            contents:prompt
-        });
+const response=await groq.chat.completions.create({
+model:"llama-3.3-70b-versatile",
+messages:[
+{
+role:"user",
+content:prompt
+}
+],
+temperature:0.3
+});
 
-        const text = response.text
-            .replace(/```json/g,"")
-            .replace(/```/g,"")
-            .replace(/\n/g," ")
-            .trim();
+const text=response.choices[0].message.content
+.replace(/```json/g,"")
+.replace(/```/g,"")
+.replace(/\n/g," ")
+.trim();
 
-        const jsonStart = text.indexOf("{");
-        const jsonEnd = text.lastIndexOf("}") + 1;
+const jsonStart=text.indexOf("{");
+const jsonEnd=text.lastIndexOf("}")+1;
+const jsonText=text.substring(jsonStart,jsonEnd);
 
-        const jsonText = text.substring(jsonStart,jsonEnd);
+return JSON.parse(jsonText);
 
-        return JSON.parse(jsonText);
-
-    } catch(error){
-        console.error("Gemini Summary Error:",error);
-        throw new Error("Failed to generate interview summary");
-    }
+}catch(error){
+console.error("Groq Summary Error:",error);
+throw new Error("Failed to generate interview summary");
+}
 };
