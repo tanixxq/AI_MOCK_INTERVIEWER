@@ -1,119 +1,180 @@
-import {useState} from "react";
-import {useNavigate} from "react-router-dom";
+import {useEffect,useState} from "react";
+import {useParams,useNavigate} from "react-router-dom";
 import API from "../Services/api.js";
-import "./Register.css";
 
-const Register=()=>{
+const Report=()=>{
 
+    const {id}=useParams();
     const navigate=useNavigate();
 
-    const [formData,setFormData]=useState({
-        name:"",
-        email:"",
-        password:""
-    });
+    const [report,setReport]=useState(null);
+    const [loading,setLoading]=useState(true);
 
-    const [error,setError]=useState("");
-    const [loading,setLoading]=useState(false);
 
-    const handleChange=(e)=>{
-        setFormData({
-            ...formData,
-            [e.target.name]:e.target.value
-        });
-    };
+    useEffect(()=>{
 
-    const handleSubmit=async(e)=>{
-        e.preventDefault();
+        const fetchReport=async()=>{
 
-        try{
-            setLoading(true);
-            setError("");
+            try{
 
-            await API.post("/auth/register",formData);
+                const response=await API.get(`/interviews/${id}`);
 
-            alert("Registration successful!");
+                setReport(response.data.interview);
 
-            navigate("/login");
+            }catch(error){
 
-        }catch(error){
-            console.log(error);
+                console.log(error);
 
-            setError(
-                error.response?.data?.message ||
-                "Registration failed"
-            );
+            }finally{
 
-        }finally{
-            setLoading(false);
-        }
-    };
+                setLoading(false);
+
+            }
+
+        };
+
+
+        fetchReport();
+
+    },[id]);
+
+
+
+    if(loading){
+
+        return(
+            <div className="report-loading">
+                Loading Report...
+            </div>
+        );
+
+    }
+
+
+
+    if(!report){
+
+        return(
+            <div className="report-loading">
+                Report not found
+            </div>
+        );
+
+    }
+
 
 
     return(
-        <div className="register-container">
 
-            <div className="register-card">
-
-                <h1>Create Account</h1>
-
-                <p>
-                    Join AI Mock Interviewer and start practicing.
-                </p>
-
-                {error && (
-                    <div className="error">
-                        {error}
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit}>
-
-                    <input
-                        type="text"
-                        name="name"
-                        placeholder="Full Name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        required
-                    />
-
-                    <input
-                        type="email"
-                        name="email"
-                        placeholder="Email Address"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                    />
-
-                    <input
-                        type="password"
-                        name="password"
-                        placeholder="Password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        required
-                    />
-
-                    <button disabled={loading}>
-                        {loading?"Creating Account...":"Register"}
-                    </button>
-
-                </form>
+        <div className="report-container">
 
 
-                <p className="login-text">
-                    Already have an account?
-                    <span onClick={()=>navigate("/login")}>
-                        Login
+            <div className="report-card">
+
+
+                <h1>
+                    Interview Report 📊
+                </h1>
+
+
+                <div className="score-card">
+
+                    <h2>
+                        Overall Score
+                    </h2>
+
+                    <span>
+                        {report.overallScore || 0}/10
                     </span>
-                </p>
+
+                </div>
+
+
+
+                <div className="summary-section">
+
+                    <h2>
+                        Summary
+                    </h2>
+
+                    <p>
+                        {report.summary || "No summary available"}
+                    </p>
+
+                </div>
+
+
+
+
+                <div className="section">
+
+                    <h2>
+                        💪 Strengths
+                    </h2>
+
+
+                    <ul>
+
+                        {
+                            report.strengths?.map((item,index)=>(
+
+                                <li key={index}>
+                                    {item}
+                                </li>
+
+                            ))
+                        }
+
+                    </ul>
+
+                </div>
+
+
+
+
+                <div className="section">
+
+                    <h2>
+                        🚀 Improvements
+                    </h2>
+
+
+                    <ul>
+
+                        {
+                            report.improvements?.map((item,index)=>(
+
+                                <li key={index}>
+                                    {item}
+                                </li>
+
+                            ))
+                        }
+
+                    </ul>
+
+                </div>
+
+
+
+                <button
+                    onClick={()=>navigate("/dashboard")}
+                >
+
+                    Back to Dashboard
+
+                </button>
+
+
 
             </div>
 
+
         </div>
+
     );
+
 };
 
-export default Register;
+
+export default Report;
