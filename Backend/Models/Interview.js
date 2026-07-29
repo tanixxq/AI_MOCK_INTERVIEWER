@@ -8,8 +8,8 @@ const interviewSchema = new mongoose.Schema(
             required:true
         },
 
-        role:{
-            type:String,
+        skills:{
+            type:[String],
             required:true
         },
 
