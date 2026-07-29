@@ -1,15 +1,15 @@
-.interview-container{
+.create-interview-container{
     min-height:100vh;
     background:#f8fafc;
-    padding:40px;
     display:flex;
     justify-content:center;
     align-items:center;
+    padding:30px;
 }
 
 
-.interview-card{
-    width:700px;
+.create-interview-card{
+    width:450px;
     background:white;
     padding:40px;
     border-radius:20px;
@@ -17,59 +17,38 @@
 }
 
 
-.interview-card h1{
+.create-interview-card h1{
+    text-align:center;
     color:#2563eb;
-    margin-bottom:15px;
+    margin-bottom:30px;
 }
 
 
-.skills{
-    color:#6b7280;
-    margin-bottom:25px;
-}
-
-
-.question-count{
-    font-size:18px;
-    font-weight:600;
-    color:#374151;
-}
-
-
-.question{
-    margin-top:20px;
-    font-size:20px;
-    line-height:1.6;
-    color:#111827;
-}
-
-
-.answer-box{
+.create-interview-card input,
+.create-interview-card select{
     width:100%;
-    margin-top:25px;
-    padding:15px;
+    padding:14px;
+    margin-bottom:18px;
     border:1px solid #d1d5db;
     border-radius:12px;
-    resize:none;
     font-size:16px;
-    font-family:inherit;
     outline:none;
 }
 
 
-.answer-box:focus{
+.create-interview-card input:focus,
+.create-interview-card select:focus{
     border-color:#2563eb;
 }
 
 
-.submit-btn{
-    margin-top:25px;
+.create-interview-card button{
     width:100%;
     padding:14px;
-    border:none;
-    border-radius:12px;
     background:#2563eb;
     color:white;
+    border:none;
+    border-radius:12px;
     font-size:16px;
     font-weight:700;
     cursor:pointer;
@@ -77,44 +56,22 @@
 }
 
 
-.submit-btn:hover{
+.create-interview-card button:hover{
     background:#1d4ed8;
 }
 
 
-.submit-btn:disabled{
+.create-interview-card button:disabled{
     opacity:.6;
     cursor:not-allowed;
 }
 
 
+@media(max-width:600px){
 
-.loading{
-    min-height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    font-size:24px;
-    font-weight:600;
-}
-
-
-
-@media(max-width:768px){
-
-    .interview-container{
-        padding:20px;
-    }
-
-
-    .interview-card{
+    .create-interview-card{
         width:100%;
         padding:25px;
-    }
-
-
-    .question{
-        font-size:18px;
     }
 
 }

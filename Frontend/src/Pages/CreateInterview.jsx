@@ -1,198 +1,160 @@
-import {useNavigate,useParams} from "react-router-dom";
-import {useEffect,useState} from "react";
+import {useState} from "react";
+import {useNavigate} from "react-router-dom";
 import API from "../Services/api.js";
+import "./CreateInterview.css";
 
-const Interview=()=>{
+const CreateInterview=()=>{
 
-    const {id}=useParams();
     const navigate=useNavigate();
 
-    const [interview,setInterview]=useState(null);
-    const [loading,setLoading]=useState(true);
-    const [answer,setAnswer]=useState("");
-    const [answers,setAnswers]=useState([]);
-    const [currentQuestion,setCurrentQuestion]=useState(0);
-    const [submitting,setSubmitting]=useState(false);
+    const [skills,setSkills]=useState("");
+    const [experience,setExperience]=useState("");
+    const [difficulty,setDifficulty]=useState("Easy");
+    const [loading,setLoading]=useState(false);
 
 
-    useEffect(()=>{
+    const createInterview=async()=>{
 
-        const fetchInterview=async()=>{
-
-            try{
-
-                const response=await API.get(`/interviews/${id}`);
-
-                setInterview(response.data.interview);
-
-            }catch(error){
-
-                console.log(error);
-
-            }finally{
-
-                setLoading(false);
-
-            }
-
-        };
-
-        fetchInterview();
-
-    },[id]);
-
-
-
-    const nextQuestion=async()=>{
-
-        if(answer.trim()===""){
-            alert("Please answer the question.");
+        if(!skills || !experience){
+            alert("Please fill all fields");
             return;
         }
 
 
-        const updatedAnswers=[...answers];
-
-        updatedAnswers[currentQuestion]=answer;
-
-        setAnswers(updatedAnswers);
-
-
-
-        if(currentQuestion < interview.questions.length-1){
-
-            setCurrentQuestion(prev=>prev+1);
-
-            setAnswer(updatedAnswers[currentQuestion+1] || "");
-
-        }
-        else{
-
-            await finishInterview(updatedAnswers);
-
-        }
-
-    };
-
-
-
-    const finishInterview=async(updatedAnswers)=>{
-
         try{
 
-            setSubmitting(true);
+            setLoading(true);
 
 
             const response=await API.post(
-                `/interviews/${id}/finish`,
+                "/interviews",
                 {
-                    answers:updatedAnswers
+                    skills:skills
+                    .split(",")
+                    .map(skill=>skill.trim()),
+
+                    experience,
+
+                    difficulty
                 }
             );
 
 
-            console.log(response.data);
+            console.log(
+                "Create Interview Response:",
+                response.data
+            );
 
 
-            navigate(`/report/${response.data.interview._id}`);
+            const interview=response.data.interview;
+
+
+            if(!interview || !interview._id){
+
+                console.log(
+                    "Interview ID missing:",
+                    response.data
+                );
+
+                alert("Interview creation failed");
+
+                return;
+
+            }
+
+
+            console.log(
+                "Created Interview ID:",
+                interview._id
+            );
+
+
+            navigate(
+                `/interview/${interview._id}`
+            );
 
 
         }catch(error){
 
-            console.log(error);
+            console.log(
+                "Create Interview Error:",
+                error
+            );
 
-            alert("Failed to finish interview");
+            alert(
+                error.response?.data?.message ||
+                "Failed to create interview"
+            );
+
 
         }finally{
 
-            setSubmitting(false);
+            setLoading(false);
 
         }
 
     };
-
-
-
-    if(loading){
-
-        return <h2>Loading interview...</h2>;
-
-    }
-
-
-
-    if(!interview){
-
-        return <h2>Interview not found</h2>;
-
-    }
-
-
-
-    const question=interview.questions[currentQuestion];
-
-
-    if(!question){
-
-        return <h2>No question available</h2>;
-
-    }
 
 
 
     return(
 
-        <div className="interview-container">
+        <div className="create-interview-container">
 
-            <div className="interview-card">
+            <div className="create-interview-card">
 
                 <h1>
-                    AI Interview 🤖
+                    Create AI Interview 🤖
                 </h1>
 
 
-                <h3>
-                    Skills: {interview.skills.join(", ")}
-                </h3>
-
-
-                <h2>
-                    Question {currentQuestion+1}/{interview.questions.length}
-                </h2>
-
-
-                <p>
-                    {question.question}
-                </p>
-
-
-
-                <textarea
-
-                    value={answer}
-
-                    onChange={(e)=>setAnswer(e.target.value)}
-
-                    placeholder="Type your answer..."
-
-                    rows="6"
-
+                <input
+                    type="text"
+                    placeholder="Skills (React, Node, MongoDB)"
+                    value={skills}
+                    onChange={(e)=>setSkills(e.target.value)}
                 />
 
 
+                <input
+                    type="text"
+                    placeholder="Experience (Example: 1 year)"
+                    value={experience}
+                    onChange={(e)=>setExperience(e.target.value)}
+                />
+
+
+                <select
+                    value={difficulty}
+                    onChange={(e)=>setDifficulty(e.target.value)}
+                >
+
+                    <option value="Easy">
+                        Easy
+                    </option>
+
+                    <option value="Medium">
+                        Medium
+                    </option>
+
+                    <option value="Hard">
+                        Hard
+                    </option>
+
+                </select>
+
 
                 <button
-                    onClick={nextQuestion}
-                    disabled={submitting}
+                    onClick={createInterview}
+                    disabled={loading}
                 >
 
                     {
-                        submitting
-                        ?"Finishing..."
+                        loading
+                        ?
+                        "Generating Questions..."
                         :
-                        currentQuestion===interview.questions.length-1
-                        ?"Finish Interview"
-                        :"Next Question"
+                        "Start Interview"
                     }
 
                 </button>
@@ -207,4 +169,4 @@ const Interview=()=>{
 };
 
 
-export default Interview;
+export default CreateInterview;
