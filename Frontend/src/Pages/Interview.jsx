@@ -1,9 +1,11 @@
-import { useParams } from "react-router-dom";
-import { useEffect,useState } from "react";
+import {useNavigate,useParams} from "react-router-dom";
+import {useEffect,useState} from "react";
 import API from "../services/api";
 
 const Interview=()=>{
     const {id}=useParams();
+    const navigate=useNavigate();
+
     const [interview,setInterview]=useState(null);
     const [loading,setLoading]=useState(true);
     const [answer,setAnswer]=useState("");
@@ -26,16 +28,21 @@ const Interview=()=>{
         fetchInterview();
     },[id]);
 
-    const nextQuestion=()=>{
+    const nextQuestion=async()=>{
+        if(answer.trim()===""){
+            alert("Please answer the question.");
+            return;
+        }
+
         const updatedAnswers=[...answers];
         updatedAnswers[currentQuestion]=answer;
         setAnswers(updatedAnswers);
 
         if(currentQuestion<interview.questions.length-1){
             setCurrentQuestion(prev=>prev+1);
-            setAnswer("");
+            setAnswer(updatedAnswers[currentQuestion+1]||"");
         }else{
-            finishInterview(updatedAnswers);
+            await finishInterview(updatedAnswers);
         }
     };
 
@@ -50,9 +57,7 @@ const Interview=()=>{
                 }
             );
 
-            console.log(response.data);
-
-            alert("Interview Completed!");
+            navigate(`/report/${response.data.interview._id}`);
 
         }catch(error){
             console.log(error);
@@ -92,9 +97,8 @@ const Interview=()=>{
             <br/>
 
             <button onClick={nextQuestion} disabled={submitting}>
-                {currentQuestion===interview.questions.length-1?"Finish Interview":"Next Question"}
+                {submitting?"Finishing...":currentQuestion===interview.questions.length-1?"Finish Interview":"Next Question"}
             </button>
-
         </div>
     );
 };
