@@ -15,7 +15,7 @@ import InterviewRoutes from "./Routes/InterviewRoutes.js";
 dotenv.config();
 connectDB();
 
-console.log("Server Key Exists:", !!process.env.GEMINI_API_KEY);
+
 
 const app = express();
 
