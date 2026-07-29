@@ -51,6 +51,11 @@ const interviewSchema = new mongoose.Schema(
             }
         ],
 
+        reportGenerated:{
+            type:Boolean,
+            default:false
+        },
+
         questions:[
             {
                 question:{

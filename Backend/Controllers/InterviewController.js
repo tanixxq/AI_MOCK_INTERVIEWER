@@ -1,5 +1,5 @@
 import { Interview } from "../Models/Interview.js";
-import { generateInterviewQuestions, evaluateAnswer } from "../Services/aiServices.js";
+import { generateInterviewQuestions, evaluateAnswer, generateInterviewSummary } from "../Services/aiServices.js";
 
 
 export const createInterview = async (req, res) => {
@@ -80,33 +80,52 @@ export const SubmitAnswer = async (req,res)=>{
         const interview = await Interview.findOne({
             _id:id,
             userId:req.user.id
-        })
+        });
+
         if(!interview){
             return res.status(404).json({
                 message:"Interview not found"
-            })
+            });
         }
+
         if(
-            questionIndex<0 ||
-            questionIndex>=interview.questions.length
-        ) {
+            questionIndex < 0 ||
+            questionIndex >= interview.questions.length
+        ){
             return res.status(400).json({
                 message:"Invalid question index"
-            })
+            });
         }
+
         interview.questions[questionIndex].answer = answer;
 
         const evaluation = await evaluateAnswer(
-            interview.questions[questionIndex].question,answer);
+            interview.questions[questionIndex].question,
+            answer
+        );
 
         interview.questions[questionIndex].feedback = evaluation.feedback;
         interview.questions[questionIndex].score = evaluation.score;
 
         const isCompleted = interview.questions.every(
-            (question) => question.answer && question.answer.trim().length > 0
+            (question)=>question.answer && question.answer.trim().length > 0
         );
-        if(isCompleted){
+
+        if(isCompleted && !interview.reportGenerated){
+            console.log("Generating final report...");
             interview.status = "Completed";
+
+            const summary = await generateInterviewSummary(
+                interview.questions
+            );
+
+            console.log("Generated Summary:", summary);
+
+            interview.overallScore = summary.overallScore;
+            interview.summary = summary.summary;
+            interview.strengths = summary.strengths;
+            interview.improvements = summary.improvements;
+            interview.reportGenerated = true;
         }
 
         await interview.save();
@@ -114,12 +133,12 @@ export const SubmitAnswer = async (req,res)=>{
         res.status(200).json({
             message:"Answer submitted successfully",
             interview
-        })
+        });
 
     }catch(error){
         res.status(500).json({
             message:"Error submitting answer",
             error:error.message
-        })
+        });
     }
-}
+};

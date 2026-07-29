@@ -104,3 +104,71 @@ export const evaluateAnswer = async (question, answer) => {
         throw new Error("Failed to evaluate answer");
     }
 };
+
+export const generateInterviewSummary = async (questions) => {
+    try {
+        const ai = new GoogleGenAI({
+            apiKey: process.env.GEMINI_API_KEY,
+        });
+
+        const prompt = `
+You are a senior technical interviewer.
+
+Analyze the complete interview performance.
+
+Evaluate the candidate based on:
+- Technical understanding
+- Accuracy of answers
+- Problem solving ability
+- Strengths
+- Areas of improvement
+
+Interview Data:
+
+${JSON.stringify(questions)}
+
+Return ONLY valid JSON.
+
+Format:
+{
+    "overallScore": 8,
+    "summary": "Overall interview performance summary",
+    "strengths": [
+        "Strength 1",
+        "Strength 2"
+    ],
+    "improvements": [
+        "Improvement 1",
+        "Improvement 2"
+    ]
+}
+
+Rules:
+- overallScore should be between 0 and 10.
+- Do not judge only by answer length.
+- Consider technical correctness and understanding.
+`;
+
+        const response = await ai.models.generateContent({
+            model:"gemini-2.5-flash",
+            contents:prompt
+        });
+
+        const text = response.text
+            .replace(/```json/g,"")
+            .replace(/```/g,"")
+            .replace(/\n/g," ")
+            .trim();
+
+        const jsonStart = text.indexOf("{");
+        const jsonEnd = text.lastIndexOf("}") + 1;
+
+        const jsonText = text.substring(jsonStart,jsonEnd);
+
+        return JSON.parse(jsonText);
+
+    } catch(error){
+        console.error("Gemini Summary Error:",error);
+        throw new Error("Failed to generate interview summary");
+    }
+};
