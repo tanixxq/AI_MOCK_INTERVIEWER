@@ -1,83 +1,58 @@
 import { Interview } from "../Models/Interview.js";
-import { generateInterviewQuestions, evaluateAnswer, generateInterviewSummary } from "../Services/aiServices.js";
+import { generateInterviewQuestions,evaluateInterview } from "../Services/aiServices.js";
 
-
-export const createInterview = async (req, res) => {
-    try {
-        const {
+export const createInterview=async(req,res)=>{
+    try{
+        const{
             skills,
             experience,
             difficulty
-        } = req.body;
+        }=req.body;
 
-        const questions = await generateInterviewQuestions(
+        const questions=await generateInterviewQuestions(
             skills,
             difficulty,
             experience
         );
 
-        const formattedQuestions = questions.map((question) => ({
+        const formattedQuestions=questions.map((question)=>({
             question,
             answer:"",
-            feedback:""
-        }))
+            feedback:"",
+            score:0
+        }));
 
-        const interview = new Interview({
-            userId: req.user.id,
+        const interview=new Interview({
+            userId:req.user.id,
             skills,
             experience,
             difficulty,
-            questions: formattedQuestions
+            questions:formattedQuestions
         });
 
         await interview.save();
 
         res.status(201).json({
-            message: "Interview created successfully",
+            message:"Interview created successfully",
             interview
         });
 
-    } catch (error) {
+    }catch(error){
         res.status(500).json({
-            message: "Error creating interview",
-            error: error.message
+            message:"Error creating interview",
+            error:error.message
         });
     }
 };
 
-export const getInterviewById = async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const interview = await Interview.findOne({
-            _id: id,
-            userId: req.user.id
-        });
-
-        if (!interview) {
-            return res.status(404).json({
-                message: "Interview not found"
-            });
-        }
-
-        res.status(200).json({
-            interview
-        });
-
-    } catch (error) {
-        res.status(500).json({
-            message: "Error fetching interview",
-            error: error.message
-        });
-    }
-};
-
-export const SubmitAnswer = async (req,res)=>{
+export const getInterviewById=async(req,res)=>{
     try{
-        const {id} = req.params;
-        const {questionIndex,answer}=req.body;
+        const{id}=req.params;
 
-        const interview = await Interview.findOne({
+        console.log("Interview ID:",id);
+        console.log("Logged in User:",req.user.id);
+
+        const interview=await Interview.findOne({
             _id:id,
             userId:req.user.id
         });
@@ -88,56 +63,61 @@ export const SubmitAnswer = async (req,res)=>{
             });
         }
 
-        if(
-            questionIndex < 0 ||
-            questionIndex >= interview.questions.length
-        ){
-            return res.status(400).json({
-                message:"Invalid question index"
-            });
-        }
-
-        interview.questions[questionIndex].answer = answer;
-
-        const evaluation = await evaluateAnswer(
-            interview.questions[questionIndex].question,
-            answer
-        );
-
-        interview.questions[questionIndex].feedback = evaluation.feedback;
-        interview.questions[questionIndex].score = evaluation.score;
-
-        const isCompleted = interview.questions.every(
-            (question)=>question.answer && question.answer.trim().length > 0
-        );
-
-        if(isCompleted && !interview.reportGenerated){
-            console.log("Generating final report...");
-            interview.status = "Completed";
-
-            const summary = await generateInterviewSummary(
-                interview.questions
-            );
-
-            console.log("Generated Summary:", summary);
-
-            interview.overallScore = summary.overallScore;
-            interview.summary = summary.summary;
-            interview.strengths = summary.strengths;
-            interview.improvements = summary.improvements;
-            interview.reportGenerated = true;
-        }
-
-        await interview.save();
-
         res.status(200).json({
-            message:"Answer submitted successfully",
             interview
         });
 
     }catch(error){
         res.status(500).json({
-            message:"Error submitting answer",
+            message:"Error fetching interview",
+            error:error.message
+        });
+    }
+};
+
+export const finishInterview=async(req,res)=>{
+    try{
+        const{id}=req.params;
+        const{answers}=req.body;
+
+        const interview=await Interview.findOne({
+            _id:id,
+            userId:req.user.id
+        });
+
+        if(!interview){
+            return res.status(404).json({
+                message:"Interview not found"
+            });
+        }
+
+        answers.forEach((answer,index)=>{
+            interview.questions[index].answer=answer;
+        });
+
+        const report=await evaluateInterview(interview.questions);
+
+        report.questions.forEach((item,index)=>{
+            interview.questions[index].score=item.score;
+            interview.questions[index].feedback=item.feedback;
+        });
+
+        interview.overallScore=report.overallScore;
+        interview.summary=report.summary;
+        interview.strengths=report.strengths;
+        interview.improvements=report.improvements;
+        interview.status="Completed";
+
+        await interview.save();
+
+        res.status(200).json({
+            message:"Interview completed successfully",
+            interview
+        });
+
+    }catch(error){
+        res.status(500).json({
+            message:"Error completing interview",
             error:error.message
         });
     }

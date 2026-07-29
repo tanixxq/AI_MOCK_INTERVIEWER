@@ -1,20 +1,20 @@
 import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect,useState } from "react";
 import API from "../services/api";
 
-const Interview = () => {
-    const { id } = useParams();
-    const [interview,setInterview] = useState(null);
-    const [loading,setLoading] = useState(true);
-    const [answer,setAnswer] = useState("");
-    const [currentQuestion,setCurrentQuestion] = useState(0);
-    const [evaluation,setEvaluation] = useState(null);
-    const [submitting,setSubmitting] = useState(false);
+const Interview=()=>{
+    const {id}=useParams();
+    const [interview,setInterview]=useState(null);
+    const [loading,setLoading]=useState(true);
+    const [answer,setAnswer]=useState("");
+    const [answers,setAnswers]=useState([]);
+    const [currentQuestion,setCurrentQuestion]=useState(0);
+    const [submitting,setSubmitting]=useState(false);
 
     useEffect(()=>{
-        const fetchInterview = async()=>{
+        const fetchInterview=async()=>{
             try{
-                const response = await API.get(`/interviews/${id}`);
+                const response=await API.get(`/interviews/${id}`);
                 setInterview(response.data.interview);
             }catch(error){
                 console.log(error);
@@ -22,29 +22,37 @@ const Interview = () => {
                 setLoading(false);
             }
         };
+
         fetchInterview();
     },[id]);
 
-    const submitAnswer = async()=>{
+    const nextQuestion=()=>{
+        const updatedAnswers=[...answers];
+        updatedAnswers[currentQuestion]=answer;
+        setAnswers(updatedAnswers);
+
+        if(currentQuestion<interview.questions.length-1){
+            setCurrentQuestion(prev=>prev+1);
+            setAnswer("");
+        }else{
+            finishInterview(updatedAnswers);
+        }
+    };
+
+    const finishInterview=async(updatedAnswers)=>{
         try{
             setSubmitting(true);
 
-            const response = await API.post(
-                `/interviews/${id}/answer`,
+            const response=await API.post(
+                `/interviews/${id}/finish`,
                 {
-                    questionIndex:currentQuestion,
-                    answer
+                    answers:updatedAnswers
                 }
             );
 
-            const updatedQuestion = response.data.interview.questions[currentQuestion];
+            console.log(response.data);
 
-            setEvaluation({
-                score:updatedQuestion.score,
-                feedback:updatedQuestion.feedback
-            });
-
-            setInterview(response.data.interview);
+            alert("Interview Completed!");
 
         }catch(error){
             console.log(error);
@@ -53,11 +61,11 @@ const Interview = () => {
         }
     };
 
-    if(loading || !interview){
+    if(loading||!interview){
         return <h2>Loading interview...</h2>;
     }
 
-    const question = interview.questions[currentQuestion];
+    const question=interview.questions[currentQuestion];
 
     return(
         <div>
@@ -68,7 +76,7 @@ const Interview = () => {
             </h3>
 
             <h2>
-                Question {currentQuestion + 1}/{interview.questions.length}
+                Question {currentQuestion+1}/{interview.questions.length}
             </h2>
 
             <p>{question.question}</p>
@@ -83,18 +91,12 @@ const Interview = () => {
 
             <br/>
 
-            <button onClick={submitAnswer} disabled={submitting}>
-                {submitting ? "Evaluating..." : "Submit Answer"}
+            <button onClick={nextQuestion} disabled={submitting}>
+                {currentQuestion===interview.questions.length-1?"Finish Interview":"Next Question"}
             </button>
 
-            {evaluation && (
-                <div>
-                    <h2>Score: {evaluation.score}/10</h2>
-                    <p>{evaluation.feedback}</p>
-                </div>
-            )}
         </div>
-    )
-}
+    );
+};
 
 export default Interview;

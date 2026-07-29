@@ -1,6 +1,6 @@
 import Groq from "groq-sdk";
 
-const groq = new Groq({
+const groq=new Groq({
 apiKey:process.env.GROQ_API_KEY
 });
 
@@ -51,36 +51,46 @@ throw new Error("Failed to generate interview questions");
 }
 };
 
-export const evaluateAnswer=async(question,answer)=>{
+export const evaluateInterview=async(questions)=>{
 try{
 const prompt=`
 You are an experienced technical interviewer.
 
-Evaluate the candidate's answer based on:
-- Technical correctness
-- Understanding of the concept
-- Relevance to the question
-- Clarity of explanation
+Evaluate the complete interview.
 
-Important:
-- Do NOT judge the answer based on length.
-- Short answers can receive high scores if they demonstrate correct understanding.
-- Evaluate like a real human interviewer.
-- Do not expect every possible keyword.
-- Give lower scores only if important concepts are missing or the answer is incorrect.
+Interview Data:
+${JSON.stringify(questions)}
 
-Question:
-${question}
+For EACH question:
+- Give a score between 0 and 10.
+- Give detailed constructive feedback.
 
-Candidate Answer:
-${answer}
+Then provide:
+- overallScore (0-10)
+- summary
+- strengths (array)
+- improvements (array)
 
 Return ONLY valid JSON.
 
 Format:
 {
+"questions":[
+{
 "score":8,
-"feedback":"Your feedback here"
+"feedback":"Feedback here"
+}
+],
+"overallScore":8,
+"summary":"Overall interview performance summary",
+"strengths":[
+"Strength 1",
+"Strength 2"
+],
+"improvements":[
+"Improvement 1",
+"Improvement 2"
+]
 }
 `;
 
@@ -109,75 +119,6 @@ return JSON.parse(jsonText);
 
 }catch(error){
 console.error("Groq Evaluation Error:",error);
-throw new Error("Failed to evaluate answer");
-}
-};
-
-export const generateInterviewSummary=async(questions)=>{
-try{
-const prompt=`
-You are a senior technical interviewer.
-
-Analyze the complete interview performance.
-
-Evaluate the candidate based on:
-- Technical understanding
-- Accuracy of answers
-- Problem solving ability
-- Strengths
-- Areas of improvement
-
-Interview Data:
-
-${JSON.stringify(questions)}
-
-Return ONLY valid JSON.
-
-Format:
-{
-"overallScore":8,
-"summary":"Overall interview performance summary",
-"strengths":[
-"Strength 1",
-"Strength 2"
-],
-"improvements":[
-"Improvement 1",
-"Improvement 2"
-]
-}
-
-Rules:
-- overallScore should be between 0 and 10.
-- Do not judge only by answer length.
-- Consider technical correctness and understanding.
-`;
-
-const response=await groq.chat.completions.create({
-model:"llama-3.3-70b-versatile",
-messages:[
-{
-role:"user",
-content:prompt
-}
-],
-temperature:0.3
-});
-
-const text=response.choices[0].message.content
-.replace(/```json/g,"")
-.replace(/```/g,"")
-.replace(/\n/g," ")
-.trim();
-
-const jsonStart=text.indexOf("{");
-const jsonEnd=text.lastIndexOf("}")+1;
-const jsonText=text.substring(jsonStart,jsonEnd);
-
-return JSON.parse(jsonText);
-
-}catch(error){
-console.error("Groq Summary Error:",error);
-throw new Error("Failed to generate interview summary");
+throw new Error("Failed to evaluate interview");
 }
 };
