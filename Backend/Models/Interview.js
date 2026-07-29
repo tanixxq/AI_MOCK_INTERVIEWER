@@ -29,6 +29,28 @@ const interviewSchema = new mongoose.Schema(
             default:"Started"
         },
 
+        summary:{
+            type:String,
+            default:""
+        },
+
+        overallScore:{
+            type:Number,
+            default:0
+        },
+
+        strengths:[
+            {
+                type:String
+            }
+        ],
+
+        improvements:[
+            {
+                type:String
+            }
+        ],
+
         questions:[
             {
                 question:{

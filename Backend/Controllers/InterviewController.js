@@ -77,7 +77,7 @@ export const SubmitAnswer = async (req,res)=>{
         const {id} = req.params;
         const {questionIndex,answer}=req.body;
 
-        const interview = await Interview.findById({
+        const interview = await Interview.findOne({
             _id:id,
             userId:req.user.id
         })
@@ -101,6 +101,13 @@ export const SubmitAnswer = async (req,res)=>{
 
         interview.questions[questionIndex].feedback = evaluation.feedback;
         interview.questions[questionIndex].score = evaluation.score;
+
+        const isCompleted = interview.questions.every(
+            (question) => question.answer && question.answer.trim().length > 0
+        );
+        if(isCompleted){
+            interview.status = "Completed";
+        }
 
         await interview.save();
 
