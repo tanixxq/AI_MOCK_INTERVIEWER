@@ -71,3 +71,41 @@ export const getInterviewById = async (req, res) => {
         });
     }
 };
+
+export const SubmitAnswer = async (req,res)=>{
+    try{
+        const {id} = req.params;
+        const {questionIndex,answer}=req.body;
+
+        const interview = await Interview.findById({
+            _id:id,
+            userId:req.user.id
+        })
+        if(!interview){
+            return res.status(404).json({
+                message:"Interview not found"
+            })
+        }
+        if(
+            questionIndex<0 ||
+            questionIndex>=interview.questions.length
+        ) {
+            return res.status(400).json({
+                message:"Invalid question index"
+            })
+        }
+        interview.questions[questionIndex].answer = answer;
+        await interview.save();
+
+        res.status(200).json({
+            message:"Answer submitted successfully",
+            interview
+        })
+
+    }catch(error){
+        res.status(500).json({
+            message:"Error submitting answer",
+            error:error.message
+        })
+    }
+}
