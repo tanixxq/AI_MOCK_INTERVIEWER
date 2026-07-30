@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import {Interview} from "../Models/Interview.js";
 import {generateInterviewQuestions,evaluateInterview} from "../Services/aiServices.js";
 
+
 export const createInterview=async(req,res)=>{
     try{
         const {skills,experience,difficulty}=req.body;
