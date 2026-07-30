@@ -1,4 +1,5 @@
 import {BrowserRouter,Routes,Route} from "react-router-dom";
+import "./styles/theme.css";
 import Report from "./Pages/Report";
 import Home from "./Pages/Home";
 import Register from "./Pages/Register";
@@ -7,6 +8,7 @@ import Dashboard from "./Pages/Dashboard";
 import Interview from "./Pages/Interview";
 import CreateInterview from "./Pages/CreateInterview";
 import Navbar from "./Components/Navbar";
+
 
 function App(){
 
