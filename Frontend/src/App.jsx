@@ -1,5 +1,5 @@
 import {BrowserRouter,Routes,Route,Navigate} from "react-router-dom";
-import "./styles/theme.css";
+import "./styles/Theme.css";
 import Navbar from "./Components/Navbar";
 import ProtectedRoute from "./Components/ProtectedRoutes";
 import Home from "./Pages/Home";
