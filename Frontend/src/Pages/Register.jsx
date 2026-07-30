@@ -31,14 +31,20 @@ const Register=()=>{
             setLoading(true);
             setError("");
 
-            await API.post(
+            const response=await API.post(
                 "/auth/register",
                 formData
             );
 
-            alert("Registration successful!");
+            console.log("REGISTER RESPONSE:",response.data);
+            console.log("REGISTER TOKEN:",response.data.token);
 
-            navigate("/login");
+            localStorage.setItem(
+                "token",
+                response.data.token
+            );
+
+            navigate("/dashboard");
 
         }catch(error){
 
@@ -54,6 +60,7 @@ const Register=()=>{
             setLoading(false);
 
         }
+
     };
 
     return(

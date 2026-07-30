@@ -6,22 +6,45 @@ import "./Dashboard.css";
 const Dashboard=()=>{
 
     const navigate=useNavigate();
-
     const [user,setUser]=useState(null);
 
     useEffect(()=>{
 
         const fetchUser=async()=>{
 
+            const token=localStorage.getItem("token");
+
+            if(!token){
+                navigate("/login");
+                return;
+            }
+
             try{
+
                 const response=await API.get("/auth/me");
-                setUser(response.data.user);
+
+                const currentUser=
+                    response.data.user || response.data;
+
+                setUser(currentUser);
 
             }catch(error){
-                console.log(error);
 
-                localStorage.removeItem("token");
-                navigate("/login");
+                console.log(
+                    "Dashboard Auth Error:",
+                    error
+                );
+
+                if(
+                    error.response?.status===401 ||
+                    error.response?.status===403
+                ){
+
+                    localStorage.removeItem("token");
+                    navigate("/login");
+
+                }
+
             }
 
         };
@@ -33,67 +56,90 @@ const Dashboard=()=>{
 
     return(
 
-        <div className="dashboard-container">
+        <main className="dashboard-container">
 
-            <main className="dashboard-content">
+            <div className="dashboard-content">
 
                 <section className="welcome-card">
 
-                    <h1>
-                        Welcome back {user?.name || "User"} 👋
-                    </h1>
+                    <div className="welcome-content">
 
-                    <p>
-                        Practice technical interviews and improve your skills with AI feedback.
-                    </p>
+                        <div className="status-badge">
+                            <span className="status-dot"></span>
+                            AI Interviewer is ready
+                        </div>
 
-                    <button
-                        className="start-btn"
-                        onClick={()=>navigate("/create-interview")}
-                    >
-                        Start New Interview
-                    </button>
+                        <h1>
+                            Welcome back, {user?.name || "Developer"} 👋
+                        </h1>
+
+                        <p>
+                            Sharpen your technical interview skills with
+                            personalized AI interviews, instant evaluation,
+                            and actionable feedback.
+                        </p>
+
+                        <button
+                            className="start-btn"
+                            onClick={()=>navigate("/create-interview")}
+                        >
+                            Start New Interview
+                        </button>
+
+                    </div>
 
                 </section>
 
 
                 <section className="stats-container">
 
-                    <div className="stat-card">
+                    <div className="stat-card stat-primary">
 
-                        <h3>
-                            Interviews
-                        </h3>
+                        <div className="stat-icon">
+                            🎯
+                        </div>
 
-                        <p>
-                            0
-                        </p>
+                        <div className="stat-content">
+                            <span className="stat-label">
+                                Total Interviews
+                            </span>
 
-                    </div>
-
-
-                    <div className="stat-card">
-
-                        <h3>
-                            Average Score
-                        </h3>
-
-                        <p>
-                            -
-                        </p>
+                            <p>0</p>
+                        </div>
 
                     </div>
 
 
-                    <div className="stat-card">
+                    <div className="stat-card stat-success">
 
-                        <h3>
-                            Skill Growth
-                        </h3>
+                        <div className="stat-icon">
+                            📈
+                        </div>
 
-                        <p>
-                            -
-                        </p>
+                        <div className="stat-content">
+                            <span className="stat-label">
+                                Average Score
+                            </span>
+
+                            <p>—</p>
+                        </div>
+
+                    </div>
+
+
+                    <div className="stat-card stat-accent">
+
+                        <div className="stat-icon">
+                            ⚡
+                        </div>
+
+                        <div className="stat-content">
+                            <span className="stat-label">
+                                Skills Practiced
+                            </span>
+
+                            <p>0</p>
+                        </div>
 
                     </div>
 
@@ -102,19 +148,56 @@ const Dashboard=()=>{
 
                 <section className="recent-card">
 
-                    <h2>
-                        Recent Interviews
-                    </h2>
+                    <div className="recent-header">
 
-                    <p>
-                        Your completed interviews will appear here.
-                    </p>
+                        <div>
+
+                            <span className="section-eyebrow">
+                                YOUR ACTIVITY
+                            </span>
+
+                            <h2>
+                                Recent Interviews
+                            </h2>
+
+                            <p>
+                                Your completed interviews will appear here.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div className="empty-state">
+
+                        <div className="empty-icon">
+                            ✨
+                        </div>
+
+                        <h3>
+                            Your interview history starts here
+                        </h3>
+
+                        <p>
+                            Complete your first AI interview and your
+                            performance report will appear here.
+                        </p>
+
+                        <button
+                            className="empty-action"
+                            onClick={()=>navigate("/create-interview")}
+                        >
+                            Take Your First Interview
+                        </button>
+
+                    </div>
 
                 </section>
 
-            </main>
+            </div>
 
-        </div>
+        </main>
 
     );
 
