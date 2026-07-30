@@ -4,101 +4,91 @@ import API from "../Services/api.js";
 import "./CreateInterview.css";
 
 const CreateInterview=()=>{
-
     const navigate=useNavigate();
-
     const [skills,setSkills]=useState("");
     const [experience,setExperience]=useState("");
     const [difficulty,setDifficulty]=useState("Easy");
     const [loading,setLoading]=useState(false);
 
     const createInterview=async()=>{
+        const cleanedSkills=[...new Set(
+            skills
+                .split(",")
+                .map(skill=>skill.trim())
+                .filter(Boolean)
+        )];
 
-        if(!skills.trim()||!experience.trim()){
-            alert("Please fill all fields");
+        if(cleanedSkills.length===0){
+            alert("Please enter at least one skill");
+            return;
+        }
+
+        if(cleanedSkills.length>10){
+            alert("You can enter up to 10 skills");
+            return;
+        }
+
+        if(!experience.trim()){
+            alert("Please enter your experience");
+            return;
+        }
+
+        if(!["Easy","Medium","Hard"].includes(difficulty)){
+            alert("Please select a valid difficulty");
             return;
         }
 
         try{
-
             setLoading(true);
 
             const response=await API.post(
                 "/interviews",
                 {
-                    skills:skills
-                        .split(",")
-                        .map(skill=>skill.trim())
-                        .filter(Boolean),
-                    experience,
+                    skills:cleanedSkills,
+                    experience:experience.trim(),
                     difficulty
                 }
             );
 
-            console.log(
-                "Create Interview Response:",
-                response.data
-            );
-
             const interview=response.data.interview;
 
-            if(!interview||!interview._id){
-                alert("Interview creation failed");
-                return;
+            if(!interview?._id){
+                throw new Error("Interview ID missing from server response");
             }
 
             navigate(`/interview/${interview._id}`);
-
         }catch(error){
-
-            console.log(
-                "Create Interview Error:",
-                error
-            );
+            console.log("Create Interview Error:",error);
 
             alert(
-                error.response?.data?.message ||
+                error.response?.data?.message||
+                error.message||
                 "Failed to create interview"
             );
-
         }finally{
-
             setLoading(false);
-
         }
-
     };
 
     return(
-
         <main className="create-interview-page">
-
             <section className="create-interview-card">
-
                 <div className="create-interview-header">
-
                     <span className="create-interview-badge">
                         AI INTERVIEW
                     </span>
 
-                    <h1>
-                        Build Your Interview
-                    </h1>
+                    <h1>Build Your Interview</h1>
 
                     <p>
                         Choose your skills, experience, and difficulty.
                         Our AI will generate a personalized technical interview.
                     </p>
-
                 </div>
 
                 <div className="create-interview-form">
-
                     <div className="form-group">
-
-                        <label htmlFor="skills">
-                            Skills
-                        </label>
+                        <label htmlFor="skills">Skills</label>
 
                         <input
                             id="skills"
@@ -111,14 +101,10 @@ const CreateInterview=()=>{
                         <span className="field-hint">
                             Separate multiple skills with commas.
                         </span>
-
                     </div>
 
                     <div className="form-group">
-
-                        <label htmlFor="experience">
-                            Experience
-                        </label>
+                        <label htmlFor="experience">Experience</label>
 
                         <input
                             id="experience"
@@ -127,14 +113,10 @@ const CreateInterview=()=>{
                             value={experience}
                             onChange={(e)=>setExperience(e.target.value)}
                         />
-
                     </div>
 
                     <div className="form-group">
-
-                        <label htmlFor="difficulty">
-                            Difficulty
-                        </label>
+                        <label htmlFor="difficulty">Difficulty</label>
 
                         <select
                             id="difficulty"
@@ -145,7 +127,6 @@ const CreateInterview=()=>{
                             <option value="Medium">Medium</option>
                             <option value="Hard">Hard</option>
                         </select>
-
                     </div>
 
                     <button
@@ -158,11 +139,9 @@ const CreateInterview=()=>{
                             :"Generate Interview"
                         }
                     </button>
-
                 </div>
 
                 <div className="create-interview-footer">
-
                     <div>
                         <strong>10</strong>
                         <span>AI Questions</span>
@@ -177,15 +156,10 @@ const CreateInterview=()=>{
                         <strong>1</strong>
                         <span>Detailed Report</span>
                     </div>
-
                 </div>
-
             </section>
-
         </main>
-
     );
-
 };
 
 export default CreateInterview;
