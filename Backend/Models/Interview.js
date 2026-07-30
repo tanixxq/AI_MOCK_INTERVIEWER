@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const interviewSchema = new mongoose.Schema(
+const interviewSchema=new mongoose.Schema(
     {
         userId:{
             type:mongoose.Schema.Types.ObjectId,
@@ -27,6 +27,11 @@ const interviewSchema = new mongoose.Schema(
         status:{
             type:String,
             default:"Started"
+        },
+
+        completedAt:{
+            type:Date,
+            default:null
         },
 
         summary:{
@@ -83,7 +88,7 @@ const interviewSchema = new mongoose.Schema(
     }
 );
 
-export const Interview = mongoose.model(
+export const Interview=mongoose.model(
     "Interview",
     interviewSchema
 );

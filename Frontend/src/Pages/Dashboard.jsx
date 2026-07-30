@@ -6,11 +6,14 @@ import "./Dashboard.css";
 const Dashboard=()=>{
 
     const navigate=useNavigate();
+
     const [user,setUser]=useState(null);
+    const [interviews,setInterviews]=useState([]);
+    const [loading,setLoading]=useState(true);
 
     useEffect(()=>{
 
-        const fetchUser=async()=>{
+        const fetchDashboard=async()=>{
 
             const token=localStorage.getItem("token");
 
@@ -21,17 +24,24 @@ const Dashboard=()=>{
 
             try{
 
-                const response=await API.get("/auth/me");
+                const [userResponse,interviewResponse]=await Promise.all([
+                    API.get("/auth/me"),
+                    API.get("/interviews/my")
+                ]);
 
-                const currentUser=
-                    response.data.user || response.data;
+                setUser(
+                    userResponse.data.user ||
+                    userResponse.data
+                );
 
-                setUser(currentUser);
+                setInterviews(
+                    interviewResponse.data.interviews || []
+                );
 
             }catch(error){
 
                 console.log(
-                    "Dashboard Auth Error:",
+                    "Dashboard Error:",
                     error
                 );
 
@@ -45,13 +55,41 @@ const Dashboard=()=>{
 
                 }
 
+            }finally{
+
+                setLoading(false);
+
             }
 
         };
 
-        fetchUser();
+        fetchDashboard();
 
     },[navigate]);
+
+
+    const totalInterviews=interviews.length;
+
+
+    const averageScore=totalInterviews
+        ?
+        (
+            interviews.reduce(
+                (total,interview)=>total+(interview.overallScore || 0),
+                0
+            )/totalInterviews
+        ).toFixed(1)
+        :
+        "—";
+
+
+    const uniqueSkills=[
+        ...new Set(
+            interviews.flatMap(
+                interview=>interview.skills || []
+            )
+        )
+    ];
 
 
     return(
@@ -100,11 +138,15 @@ const Dashboard=()=>{
                         </div>
 
                         <div className="stat-content">
+
                             <span className="stat-label">
                                 Total Interviews
                             </span>
 
-                            <p>0</p>
+                            <p>
+                                {loading ? "..." : totalInterviews}
+                            </p>
+
                         </div>
 
                     </div>
@@ -117,11 +159,20 @@ const Dashboard=()=>{
                         </div>
 
                         <div className="stat-content">
+
                             <span className="stat-label">
                                 Average Score
                             </span>
 
-                            <p>—</p>
+                            <p>
+                                {loading
+                                    ?"..."
+                                    :averageScore==="—"
+                                        ?"—"
+                                        :`${averageScore}/10`
+                                }
+                            </p>
+
                         </div>
 
                     </div>
@@ -134,11 +185,18 @@ const Dashboard=()=>{
                         </div>
 
                         <div className="stat-content">
+
                             <span className="stat-label">
                                 Skills Practiced
                             </span>
 
-                            <p>0</p>
+                            <p>
+                                {loading
+                                    ?"..."
+                                    :uniqueSkills.length
+                                }
+                            </p>
+
                         </div>
 
                     </div>
@@ -161,7 +219,7 @@ const Dashboard=()=>{
                             </h2>
 
                             <p>
-                                Your completed interviews will appear here.
+                                Review your previous interview performance.
                             </p>
 
                         </div>
@@ -169,29 +227,114 @@ const Dashboard=()=>{
                     </div>
 
 
-                    <div className="empty-state">
+                    {loading ? (
 
-                        <div className="empty-icon">
-                            ✨
+                        <div className="empty-state">
+
+                            <div className="loading-spinner"></div>
+
+                            <p>
+                                Loading interview history...
+                            </p>
+
                         </div>
 
-                        <h3>
-                            Your interview history starts here
-                        </h3>
+                    ) : interviews.length===0 ? (
 
-                        <p>
-                            Complete your first AI interview and your
-                            performance report will appear here.
-                        </p>
+                        <div className="empty-state">
 
-                        <button
-                            className="empty-action"
-                            onClick={()=>navigate("/create-interview")}
-                        >
-                            Take Your First Interview
-                        </button>
+                            <div className="empty-icon">
+                                ✨
+                            </div>
 
-                    </div>
+                            <h3>
+                                Your interview history starts here
+                            </h3>
+
+                            <p>
+                                Complete your first AI interview and your
+                                performance report will appear here.
+                            </p>
+
+                            <button
+                                className="empty-action"
+                                onClick={()=>navigate("/create-interview")}
+                            >
+                                Take Your First Interview
+                            </button>
+
+                        </div>
+
+                    ) : (
+
+                        <div className="interview-history">
+
+                            {interviews.slice(0,5).map((interview)=>(
+
+                                <div
+                                    className="history-item"
+                                    key={interview._id}
+                                >
+
+                                    <div className="history-info">
+
+                                        <h3>
+                                            {interview.skills?.join(" + ")}
+                                        </h3>
+
+                                        <div className="history-meta">
+
+                                            <span>
+                                                {interview.difficulty}
+                                            </span>
+
+                                            <span>
+                                                {interview.experience}
+                                            </span>
+
+                                            <span>
+                                                {interview.completedAt
+                                                    ?
+                                                    new Date(
+                                                        interview.completedAt
+                                                    ).toLocaleDateString()
+                                                    :
+                                                    new Date(
+                                                        interview.createdAt
+                                                    ).toLocaleDateString()
+                                                }
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div className="history-score">
+
+                                        <strong>
+                                            {interview.overallScore}/10
+                                        </strong>
+
+                                        <button
+                                            onClick={()=>
+                                                navigate(
+                                                    `/report/${interview._id}`
+                                                )
+                                            }
+                                        >
+                                            View Report →
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+                            ))}
+
+                        </div>
+
+                    )}
 
                 </section>
 
