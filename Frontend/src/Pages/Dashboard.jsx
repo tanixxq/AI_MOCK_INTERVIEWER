@@ -31,34 +31,11 @@ const Dashboard=()=>{
     },[navigate]);
 
 
-    const logout=()=>{
-
-        localStorage.removeItem("token");
-
-        navigate("/login");
-
-    };
-
-
     return(
 
         <div className="dashboard-container">
 
-            <nav className="dashboard-nav">
-
-                <h2>
-                    AI Interviewer
-                </h2>
-
-                <button onClick={logout}>
-                    Logout
-                </button>
-
-            </nav>
-
-
             <main className="dashboard-content">
-
 
                 <section className="welcome-card">
 
@@ -70,7 +47,6 @@ const Dashboard=()=>{
                         Practice technical interviews and improve your skills with AI feedback.
                     </p>
 
-
                     <button
                         className="start-btn"
                         onClick={()=>navigate("/create-interview")}
@@ -79,7 +55,6 @@ const Dashboard=()=>{
                     </button>
 
                 </section>
-
 
 
                 <section className="stats-container">
@@ -122,9 +97,7 @@ const Dashboard=()=>{
 
                     </div>
 
-
                 </section>
-
 
 
                 <section className="recent-card">
@@ -139,15 +112,12 @@ const Dashboard=()=>{
 
                 </section>
 
-
             </main>
-
 
         </div>
 
     );
 
 };
-
 
 export default Dashboard;
