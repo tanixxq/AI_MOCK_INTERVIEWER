@@ -10,6 +10,7 @@ const Dashboard=()=>{
     const [user,setUser]=useState(null);
     const [interviews,setInterviews]=useState([]);
     const [loading,setLoading]=useState(true);
+    const [showAll,setShowAll]=useState(false);
 
     useEffect(()=>{
 
@@ -24,10 +25,8 @@ const Dashboard=()=>{
 
             try{
 
-                const [userResponse,interviewResponse]=await Promise.all([
-                    API.get("/auth/me"),
-                    API.get("/interviews/my")
-                ]);
+                const userResponse=await API.get("/auth/me");
+                const interviewResponse=await API.get("/interviews/my");
 
                 setUser(
                     userResponse.data.user ||
@@ -92,11 +91,33 @@ const Dashboard=()=>{
     ];
 
 
+    const visibleInterviews=showAll
+        ?interviews
+        :interviews.slice(0,5);
+
+
+    const formatDate=(date)=>{
+        if(!date){
+            return "Date unavailable";
+        }
+
+        return new Date(date).toLocaleDateString(
+            "en-IN",
+            {
+                day:"numeric",
+                month:"short",
+                year:"numeric"
+            }
+        );
+    };
+
+
     return(
 
         <main className="dashboard-container">
 
             <div className="dashboard-content">
+
 
                 <section className="welcome-card">
 
@@ -129,7 +150,9 @@ const Dashboard=()=>{
                 </section>
 
 
+
                 <section className="stats-container">
+
 
                     <div className="stat-card stat-primary">
 
@@ -144,12 +167,13 @@ const Dashboard=()=>{
                             </span>
 
                             <p>
-                                {loading ? "..." : totalInterviews}
+                                {loading?"...":totalInterviews}
                             </p>
 
                         </div>
 
                     </div>
+
 
 
                     <div className="stat-card stat-success">
@@ -165,7 +189,8 @@ const Dashboard=()=>{
                             </span>
 
                             <p>
-                                {loading
+                                {
+                                    loading
                                     ?"..."
                                     :averageScore==="—"
                                         ?"—"
@@ -176,6 +201,7 @@ const Dashboard=()=>{
                         </div>
 
                     </div>
+
 
 
                     <div className="stat-card stat-accent">
@@ -191,10 +217,7 @@ const Dashboard=()=>{
                             </span>
 
                             <p>
-                                {loading
-                                    ?"..."
-                                    :uniqueSkills.length
-                                }
+                                {loading?"...":uniqueSkills.length}
                             </p>
 
                         </div>
@@ -204,7 +227,9 @@ const Dashboard=()=>{
                 </section>
 
 
+
                 <section className="recent-card">
+
 
                     <div className="recent-header">
 
@@ -215,7 +240,7 @@ const Dashboard=()=>{
                             </span>
 
                             <h2>
-                                Recent Interviews
+                                Interview History
                             </h2>
 
                             <p>
@@ -224,7 +249,23 @@ const Dashboard=()=>{
 
                         </div>
 
+
+                        {interviews.length>5 && (
+
+                            <button
+                                className="view-all-btn"
+                                onClick={()=>setShowAll(!showAll)}
+                            >
+                                {showAll
+                                    ?"Show Less"
+                                    :"View All"
+                                }
+                            </button>
+
+                        )}
+
                     </div>
+
 
 
                     {loading ? (
@@ -269,18 +310,20 @@ const Dashboard=()=>{
 
                         <div className="interview-history">
 
-                            {interviews.slice(0,5).map((interview)=>(
+                            {visibleInterviews.map((interview)=>(
 
                                 <div
                                     className="history-item"
                                     key={interview._id}
                                 >
 
+
                                     <div className="history-info">
 
                                         <h3>
                                             {interview.skills?.join(" + ")}
                                         </h3>
+
 
                                         <div className="history-meta">
 
@@ -293,21 +336,16 @@ const Dashboard=()=>{
                                             </span>
 
                                             <span>
-                                                {interview.completedAt
-                                                    ?
-                                                    new Date(
-                                                        interview.completedAt
-                                                    ).toLocaleDateString()
-                                                    :
-                                                    new Date(
-                                                        interview.createdAt
-                                                    ).toLocaleDateString()
-                                                }
+                                                {formatDate(
+                                                    interview.completedAt ||
+                                                    interview.createdAt
+                                                )}
                                             </span>
 
                                         </div>
 
                                     </div>
+
 
 
                                     <div className="history-score">
@@ -327,6 +365,7 @@ const Dashboard=()=>{
                                         </button>
 
                                     </div>
+
 
                                 </div>
 
