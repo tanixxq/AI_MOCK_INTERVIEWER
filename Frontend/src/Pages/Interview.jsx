@@ -4,99 +4,120 @@ import API from "../Services/api.js";
 import "./Interview.css";
 
 const Interview=()=>{
-
     const {id}=useParams();
     const navigate=useNavigate();
-
     const [interview,setInterview]=useState(null);
     const [loading,setLoading]=useState(true);
     const [answer,setAnswer]=useState("");
     const [answers,setAnswers]=useState([]);
     const [currentQuestion,setCurrentQuestion]=useState(0);
     const [submitting,setSubmitting]=useState(false);
+    const [savingAnswer,setSavingAnswer]=useState(false);
+    const [answerSaved,setAnswerSaved]=useState(false);
 
     useEffect(()=>{
-
         const fetchInterview=async()=>{
-
             if(!id){
-
-                console.log("Interview ID missing");
                 setLoading(false);
-
                 return;
-
             }
 
             try{
-
                 const response=await API.get(`/interviews/${id}`);
+                const currentInterview=response.data.interview;
 
-                setInterview(response.data.interview);
+                setInterview(currentInterview);
 
-                const savedAnswers=response.data.interview.questions.map(
-                    question=>question.answer || ""
+                const savedAnswers=currentInterview.questions.map(
+                    question=>question.answer||""
                 );
 
                 setAnswers(savedAnswers);
-
+                setAnswer(savedAnswers[0]||"");
             }catch(error){
-
-                console.log(
-                    "Fetch Interview Error:",
-                    error
-                );
-
+                console.log("Fetch Interview Error:",error);
             }finally{
-
                 setLoading(false);
-
             }
-
         };
 
         fetchInterview();
-
     },[id]);
 
+    useEffect(()=>{
+        if(!interview||!id||answer===answers[currentQuestion]){
+            return;
+        }
+
+        const timer=setTimeout(async()=>{
+            try{
+                setSavingAnswer(true);
+                setAnswerSaved(false);
+
+                await API.patch(
+                    `/interviews/${id}/answers`,
+                    {
+                        questionIndex:currentQuestion,
+                        answer
+                    }
+                );
+
+                setAnswerSaved(true);
+            }catch(error){
+                console.log("Auto Save Error:",error);
+            }finally{
+                setSavingAnswer(false);
+            }
+        },800);
+
+        return()=>clearTimeout(timer);
+    },[answer,currentQuestion,interview,id,answers]);
+
+    const saveCurrentAnswer=async()=>{
+        try{
+            await API.patch(
+                `/interviews/${id}/answers`,
+                {
+                    questionIndex:currentQuestion,
+                    answer
+                }
+            );
+            return true;
+        }catch(error){
+            console.log("Save Answer Error:",error);
+            return false;
+        }
+    };
 
     const nextQuestion=async()=>{
-
         if(answer.trim()===""){
-
             alert("Please answer the question.");
-
             return;
-
         }
 
         const updatedAnswers=[...answers];
-
         updatedAnswers[currentQuestion]=answer;
-
         setAnswers(updatedAnswers);
 
-        if(currentQuestion < interview.questions.length-1){
+        const saved=await saveCurrentAnswer();
 
-            setCurrentQuestion(prev=>prev+1);
-
-            setAnswer(
-                updatedAnswers[currentQuestion+1] || ""
-            );
-
-        }else{
-
-            await finishInterview(updatedAnswers);
-
+        if(!saved){
+            alert("Could not save your answer. Please try again.");
+            return;
         }
 
+        if(currentQuestion<interview.questions.length-1){
+            const nextIndex=currentQuestion+1;
+            setCurrentQuestion(nextIndex);
+            setAnswer(updatedAnswers[nextIndex]||"");
+            setAnswerSaved(false);
+        }else{
+            await finishInterview(updatedAnswers);
+        }
     };
 
-
     const finishInterview=async(updatedAnswers)=>{
-
         try{
-
             setSubmitting(true);
 
             const response=await API.post(
@@ -106,177 +127,106 @@ const Interview=()=>{
                 }
             );
 
-            console.log(
-                "Interview Completed:",
-                response.data
-            );
-
-            navigate(
-                `/report/${response.data.interview._id}`
-            );
-
+            navigate(`/report/${response.data.interview._id}`);
         }catch(error){
-
-            console.log(
-                "Finish Interview Error:",
-                error
-            );
-
+            console.log("Finish Interview Error:",error);
             alert("Failed to finish interview");
-
         }finally{
-
             setSubmitting(false);
-
         }
-
     };
 
-
     if(loading){
-
         return(
             <div className="interview-loading">
                 <div className="loading-spinner"></div>
                 <p>Preparing your interview...</p>
             </div>
         );
-
     }
 
-
     if(!id){
-
         return(
             <div className="interview-message">
                 <h2>Invalid interview link</h2>
             </div>
         );
-
     }
 
-
     if(!interview){
-
         return(
             <div className="interview-message">
                 <h2>Interview not found</h2>
             </div>
         );
-
     }
-
 
     const question=interview.questions[currentQuestion];
 
     if(!question){
-
         return(
             <div className="interview-message">
                 <h2>No question available</h2>
             </div>
         );
-
     }
 
-
     const totalQuestions=interview.questions.length;
-
     const progress=((currentQuestion+1)/totalQuestions)*100;
-
-    const isLastQuestion=
-        currentQuestion===totalQuestions-1;
-
+    const isLastQuestion=currentQuestion===totalQuestions-1;
 
     return(
-
         <main className="interview-container">
-
             <div className="interview-background-glow interview-glow-one"></div>
             <div className="interview-background-glow interview-glow-two"></div>
 
-
             <section className="interview-card">
-
                 <div className="interview-header">
-
                     <div>
-
                         <span className="interview-badge">
                             LIVE AI INTERVIEW
                         </span>
-
-                        <h1>
-                            Technical Interview
-                        </h1>
-
+                        <h1>Technical Interview</h1>
                     </div>
 
                     <div className="question-counter">
                         {currentQuestion+1}
-                        <span>
-                            /{totalQuestions}
-                        </span>
+                        <span>/{totalQuestions}</span>
                     </div>
-
                 </div>
-
 
                 <div className="progress-section">
-
                     <div className="progress-info">
-
-                        <span>
-                            Interview Progress
-                        </span>
-
-                        <span>
-                            {Math.round(progress)}%
-                        </span>
-
+                        <span>Interview Progress</span>
+                        <span>{Math.round(progress)}%</span>
                     </div>
-
 
                     <div className="progress-track">
-
                         <div
                             className="progress-bar"
-                            style={{
-                                width:`${progress}%`
-                            }}
+                            style={{width:`${progress}%`}}
                         ></div>
-
                     </div>
-
                 </div>
 
-
                 <div className="interview-meta">
-
                     <span className="skill-label">
                         Skills
                     </span>
 
                     <div className="skill-list">
-
-                        {interview.skills.map(
-                            (skill,index)=>(
-                                <span
-                                    className="skill-tag"
-                                    key={index}
-                                >
-                                    {skill}
-                                </span>
-                            )
-                        )}
-
+                        {interview.skills.map((skill,index)=>(
+                            <span
+                                className="skill-tag"
+                                key={index}
+                            >
+                                {skill}
+                            </span>
+                        ))}
                     </div>
-
                 </div>
 
-
                 <div className="question-section">
-
                     <span className="question-label">
                         QUESTION {currentQuestion+1}
                     </span>
@@ -284,15 +234,23 @@ const Interview=()=>{
                     <h2 className="question">
                         {question.question}
                     </h2>
-
                 </div>
 
-
                 <div className="answer-section">
+                    <div className="answer-header">
+                        <label htmlFor="answer">
+                            Your Answer
+                        </label>
 
-                    <label htmlFor="answer">
-                        Your Answer
-                    </label>
+                        <span className="save-status">
+                            {savingAnswer
+                                ?"Saving..."
+                                :answerSaved
+                                    ?"Saved ✓"
+                                    :""
+                            }
+                        </span>
+                    </div>
 
                     <textarea
                         id="answer"
@@ -304,14 +262,11 @@ const Interview=()=>{
                     />
 
                     <div className="answer-hint">
-                        Take your time and explain your reasoning clearly.
+                        Your answer is automatically saved while you type.
                     </div>
-
                 </div>
 
-
                 <div className="interview-footer">
-
                     <span className="question-tip">
                         {isLastQuestion
                             ?"This is your final question."
@@ -319,13 +274,11 @@ const Interview=()=>{
                         }
                     </span>
 
-
                     <button
                         className="submit-btn"
                         onClick={nextQuestion}
-                        disabled={submitting}
+                        disabled={submitting||savingAnswer}
                     >
-
                         {submitting
                             ?"Generating Report..."
                             :isLastQuestion
@@ -333,22 +286,16 @@ const Interview=()=>{
                                 :"Next Question"
                         }
 
-                        {!submitting && (
+                        {!submitting&&(
                             <span className="button-arrow">
                                 →
                             </span>
                         )}
-
                     </button>
-
                 </div>
-
             </section>
-
         </main>
-
     );
-
 };
 
 export default Interview;

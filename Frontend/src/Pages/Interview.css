@@ -405,3 +405,20 @@
     }
 
 }
+.answer-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-bottom:9px;
+}
+
+.answer-section label{
+    margin:0;
+}
+
+.save-status{
+    color:#86efac;
+    font-size:.75rem;
+    font-weight:700;
+}

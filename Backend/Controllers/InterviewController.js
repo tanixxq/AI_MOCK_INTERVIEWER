@@ -168,3 +168,53 @@ export const finishInterview=async(req,res)=>{
         });
     }
 };
+
+export const saveAnswer=async(req,res)=>{
+    try{
+        const{id}=req.params;
+        const{questionIndex,answer}=req.body;
+
+        if(
+            questionIndex===undefined||
+            typeof answer!=="string"
+        ){
+            return res.status(400).json({
+                message:"Question index and answer are required"
+            });
+        }
+
+        const interview=await Interview.findOne({
+            _id:id,
+            userId:req.user.id,
+            status:"Started"
+        });
+
+        if(!interview){
+            return res.status(404).json({
+                message:"Active interview not found"
+            });
+        }
+
+        if(!interview.questions[questionIndex]){
+            return res.status(400).json({
+                message:"Invalid question index"
+            });
+        }
+
+        interview.questions[questionIndex].answer=answer;
+
+        await interview.save();
+
+        res.status(200).json({
+            message:"Answer saved successfully"
+        });
+
+    }catch(error){
+        console.log("Save Answer Error:",error);
+
+        res.status(500).json({
+            message:"Error saving answer",
+            error:error.message
+        });
+    }
+};
