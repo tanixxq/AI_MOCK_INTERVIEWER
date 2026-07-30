@@ -12,67 +12,42 @@ const CreateInterview=()=>{
     const [difficulty,setDifficulty]=useState("Easy");
     const [loading,setLoading]=useState(false);
 
-
     const createInterview=async()=>{
 
-        if(!skills || !experience){
+        if(!skills.trim()||!experience.trim()){
             alert("Please fill all fields");
             return;
         }
-
 
         try{
 
             setLoading(true);
 
-
             const response=await API.post(
                 "/interviews",
                 {
                     skills:skills
-                    .split(",")
-                    .map(skill=>skill.trim()),
-
+                        .split(",")
+                        .map(skill=>skill.trim())
+                        .filter(Boolean),
                     experience,
-
                     difficulty
                 }
             );
-
 
             console.log(
                 "Create Interview Response:",
                 response.data
             );
 
-
             const interview=response.data.interview;
 
-
-            if(!interview || !interview._id){
-
-                console.log(
-                    "Interview ID missing:",
-                    response.data
-                );
-
+            if(!interview||!interview._id){
                 alert("Interview creation failed");
-
                 return;
-
             }
 
-
-            console.log(
-                "Created Interview ID:",
-                interview._id
-            );
-
-
-            navigate(
-                `/interview/${interview._id}`
-            );
-
+            navigate(`/interview/${interview._id}`);
 
         }catch(error){
 
@@ -86,7 +61,6 @@ const CreateInterview=()=>{
                 "Failed to create interview"
             );
 
-
         }finally{
 
             setLoading(false);
@@ -95,78 +69,123 @@ const CreateInterview=()=>{
 
     };
 
-
-
     return(
 
-        <div className="create-interview-container">
+        <main className="create-interview-page">
 
-            <div className="create-interview-card">
+            <section className="create-interview-card">
 
-                <h1>
-                    Create AI Interview 🤖
-                </h1>
+                <div className="create-interview-header">
 
+                    <span className="create-interview-badge">
+                        AI INTERVIEW
+                    </span>
 
-                <input
-                    type="text"
-                    placeholder="Skills (React, Node, MongoDB)"
-                    value={skills}
-                    onChange={(e)=>setSkills(e.target.value)}
-                />
+                    <h1>
+                        Build Your Interview
+                    </h1>
 
+                    <p>
+                        Choose your skills, experience, and difficulty.
+                        Our AI will generate a personalized technical interview.
+                    </p>
 
-                <input
-                    type="text"
-                    placeholder="Experience (Example: 1 year)"
-                    value={experience}
-                    onChange={(e)=>setExperience(e.target.value)}
-                />
+                </div>
 
+                <div className="create-interview-form">
 
-                <select
-                    value={difficulty}
-                    onChange={(e)=>setDifficulty(e.target.value)}
-                >
+                    <div className="form-group">
 
-                    <option value="Easy">
-                        Easy
-                    </option>
+                        <label htmlFor="skills">
+                            Skills
+                        </label>
 
-                    <option value="Medium">
-                        Medium
-                    </option>
+                        <input
+                            id="skills"
+                            type="text"
+                            placeholder="React, Node.js, MongoDB"
+                            value={skills}
+                            onChange={(e)=>setSkills(e.target.value)}
+                        />
 
-                    <option value="Hard">
-                        Hard
-                    </option>
+                        <span className="field-hint">
+                            Separate multiple skills with commas.
+                        </span>
 
-                </select>
+                    </div>
 
+                    <div className="form-group">
 
-                <button
-                    onClick={createInterview}
-                    disabled={loading}
-                >
+                        <label htmlFor="experience">
+                            Experience
+                        </label>
 
-                    {
-                        loading
-                        ?
-                        "Generating Questions..."
-                        :
-                        "Start Interview"
-                    }
+                        <input
+                            id="experience"
+                            type="text"
+                            placeholder="Example: Fresher or 1 year"
+                            value={experience}
+                            onChange={(e)=>setExperience(e.target.value)}
+                        />
 
-                </button>
+                    </div>
 
+                    <div className="form-group">
 
-            </div>
+                        <label htmlFor="difficulty">
+                            Difficulty
+                        </label>
 
-        </div>
+                        <select
+                            id="difficulty"
+                            value={difficulty}
+                            onChange={(e)=>setDifficulty(e.target.value)}
+                        >
+                            <option value="Easy">Easy</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Hard">Hard</option>
+                        </select>
+
+                    </div>
+
+                    <button
+                        className="generate-btn"
+                        onClick={createInterview}
+                        disabled={loading}
+                    >
+                        {loading
+                            ?"Generating Interview..."
+                            :"Generate Interview"
+                        }
+                    </button>
+
+                </div>
+
+                <div className="create-interview-footer">
+
+                    <div>
+                        <strong>10</strong>
+                        <span>AI Questions</span>
+                    </div>
+
+                    <div>
+                        <strong>AI</strong>
+                        <span>Instant Evaluation</span>
+                    </div>
+
+                    <div>
+                        <strong>1</strong>
+                        <span>Detailed Report</span>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
 
     );
 
 };
-
 
 export default CreateInterview;

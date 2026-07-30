@@ -31,12 +31,21 @@
     box-sizing:border-box;
 }
 
+html,
+body,
+#root{
+    width:100%;
+    min-width:320px;
+    min-height:100%;
+    margin:0;
+    padding:0;
+}
+
 html{
     scroll-behavior:smooth;
 }
 
 body{
-    min-width:320px;
     min-height:100vh;
     background:
         radial-gradient(

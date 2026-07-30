@@ -15,7 +15,6 @@ const Login=()=>{
     const [error,setError]=useState("");
     const [loading,setLoading]=useState(false);
 
-
     const handleChange=(e)=>{
         setFormData({
             ...formData,
@@ -23,11 +22,11 @@ const Login=()=>{
         });
     };
 
-
     const handleSubmit=async(e)=>{
         e.preventDefault();
 
         try{
+
             setLoading(true);
             setError("");
 
@@ -49,80 +48,138 @@ const Login=()=>{
 
             setError(
                 error.response?.data?.message ||
-                "Login failed"
+                "Login failed. Please check your credentials."
             );
 
         }finally{
+
             setLoading(false);
+
         }
+
     };
 
-
     return(
-        <div className="login-container">
 
-            <div className="login-card">
+        <main className="login-container">
 
-                <h1>Welcome Back</h1>
+            <div className="login-glow login-glow-left"></div>
+            <div className="login-glow login-glow-right"></div>
 
-                <p>
-                    Login to continue your AI interview practice.
-                </p>
+            <section className="login-card">
+
+                <div className="login-header">
+
+                    <span className="login-badge">
+                        AI INTERVIEWER
+                    </span>
+
+                    <h1>
+                        Welcome Back
+                    </h1>
+
+                    <p>
+                        Sign in to continue your interview practice.
+                    </p>
+
+                </div>
 
 
                 {error && (
-                    <div className="error">
+
+                    <div className="login-error">
+                        <span>!</span>
                         {error}
                     </div>
+
                 )}
 
 
-                <form onSubmit={handleSubmit}>
+                <form
+                    className="login-form"
+                    onSubmit={handleSubmit}
+                >
 
-                    <input
-                        type="email"
-                        name="email"
-                        placeholder="Email Address"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                    />
+                    <div className="login-field">
+
+                        <label htmlFor="email">
+                            Email Address
+                        </label>
+
+                        <input
+                            id="email"
+                            type="email"
+                            name="email"
+                            placeholder="you@example.com"
+                            value={formData.email}
+                            onChange={handleChange}
+                            required
+                        />
+
+                    </div>
 
 
-                    <input
-                        type="password"
-                        name="password"
-                        placeholder="Password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        required
-                    />
+                    <div className="login-field">
+
+                        <div className="password-label">
+
+                            <label htmlFor="password">
+                                Password
+                            </label>
+
+                        </div>
+
+                        <input
+                            id="password"
+                            type="password"
+                            name="password"
+                            placeholder="Enter your password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            required
+                        />
+
+                    </div>
 
 
-                    <button disabled={loading}>
-                        {
-                            loading
-                            ?"Logging in..."
-                            :"Login"
+                    <button
+                        className="login-btn"
+                        type="submit"
+                        disabled={loading}
+                    >
+
+                        {loading
+                            ?"Signing in..."
+                            :"Sign In"
                         }
+
+                        {!loading && <span>→</span>}
+
                     </button>
 
                 </form>
 
 
+                <div className="login-divider">
+                    <span>or</span>
+                </div>
+
+
                 <p className="register-text">
+
                     Don't have an account?
 
                     <span onClick={()=>navigate("/register")}>
-                        Register
+                        Create one
                     </span>
 
                 </p>
 
-            </div>
+            </section>
 
-        </div>
+        </main>
     );
+
 };
 
 export default Login;

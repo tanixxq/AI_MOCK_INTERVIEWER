@@ -1,84 +1,264 @@
 .register-container{
-    min-height:100vh;
+    width:100%;
+    min-height:calc(100vh - 72px);
+    position:relative;
+    overflow:hidden;
     display:flex;
     justify-content:center;
     align-items:center;
-    background:linear-gradient(135deg,#2563eb,#7c3aed);
-    padding:20px;
+    padding:40px 20px;
+    background:
+        radial-gradient(
+            circle at 15% 20%,
+            rgba(99,102,241,.12),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 85% 80%,
+            rgba(6,182,212,.08),
+            transparent 28%
+        ),
+        var(--bg);
+}
+
+.register-glow{
+    position:absolute;
+    border-radius:50%;
+    pointer-events:none;
+    filter:blur(100px);
+}
+
+.register-glow-left{
+    width:420px;
+    height:420px;
+    top:-180px;
+    left:-180px;
+    background:rgba(99,102,241,.1);
+}
+
+.register-glow-right{
+    width:380px;
+    height:380px;
+    right:-160px;
+    bottom:-160px;
+    background:rgba(6,182,212,.07);
 }
 
 .register-card{
-    width:100%;
-    max-width:420px;
-    background:white;
+    position:relative;
+    z-index:1;
+    width:min(460px,100%);
     padding:40px;
-    border-radius:18px;
-    box-shadow:0 15px 35px rgba(0,0,0,.15);
+    border:1px solid var(--border);
+    border-radius:var(--radius-xl);
+    background:
+        linear-gradient(
+            145deg,
+            rgba(17,24,39,.96),
+            rgba(13,20,36,.93)
+        );
+    box-shadow:var(--shadow-lg);
+    backdrop-filter:blur(18px);
 }
 
-.register-card h1{
+.register-header{
     text-align:center;
-    margin-bottom:10px;
-    color:#111827;
+    margin-bottom:30px;
 }
 
-.register-card p{
-    text-align:center;
-    color:#6b7280;
-    margin-bottom:25px;
+.register-badge{
+    display:inline-flex;
+    align-items:center;
+    margin-bottom:15px;
+    padding:6px 12px;
+    border:1px solid rgba(99,102,241,.24);
+    border-radius:999px;
+    background:rgba(99,102,241,.1);
+    color:#a5b4fc;
+    font-size:.7rem;
+    font-weight:800;
+    letter-spacing:.14em;
 }
 
-.register-card form{
+.register-header h1{
+    margin-bottom:9px;
+    color:var(--text);
+    font-size:2.15rem;
+    line-height:1.1;
+    letter-spacing:-.04em;
+}
+
+.register-header p{
+    margin:0;
+    color:var(--muted);
+    font-size:.92rem;
+    line-height:1.6;
+}
+
+.register-error{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:20px;
+    padding:12px 14px;
+    border:1px solid rgba(239,68,68,.2);
+    border-radius:11px;
+    background:rgba(239,68,68,.08);
+    color:#fca5a5;
+    font-size:.85rem;
+    line-height:1.5;
+}
+
+.register-error span{
+    width:20px;
+    height:20px;
+    flex-shrink:0;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    border-radius:50%;
+    background:rgba(239,68,68,.16);
+    color:#f87171;
+    font-size:.75rem;
+    font-weight:800;
+}
+
+.register-form{
     display:flex;
     flex-direction:column;
-    gap:15px;
+    gap:18px;
 }
 
-.register-card input{
-    padding:14px;
-    border:1px solid #d1d5db;
-    border-radius:10px;
-    font-size:1rem;
+.register-field{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.register-field label{
+    color:var(--text-soft);
+    font-size:.88rem;
+    font-weight:700;
+}
+
+.register-field input{
+    width:100%;
+    padding:14px 15px;
+    border:1px solid var(--border);
+    border-radius:11px;
     outline:none;
+    background:rgba(8,13,26,.72);
+    color:var(--text);
+    font-size:.94rem;
+    transition:var(--transition);
 }
 
-.register-card input:focus{
-    border-color:#2563eb;
+.register-field input::placeholder{
+    color:#64748b;
 }
 
-.register-card button{
-    padding:14px;
-    background:#2563eb;
+.register-field input:hover{
+    border-color:var(--border-strong);
+}
+
+.register-field input:focus{
+    border-color:rgba(99,102,241,.6);
+    box-shadow:
+        0 0 0 3px rgba(99,102,241,.1),
+        0 0 20px rgba(99,102,241,.08);
+}
+
+.register-btn{
+    width:100%;
+    margin-top:4px;
+    padding:14px 18px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
+    border:1px solid transparent;
+    border-radius:11px;
+    background:
+        linear-gradient(
+            135deg,
+            var(--primary),
+            var(--secondary)
+        );
     color:white;
-    border:none;
-    border-radius:10px;
-    font-size:1rem;
-    cursor:pointer;
-    font-weight:600;
-    transition:.3s;
+    font-size:.95rem;
+    font-weight:800;
+    box-shadow:0 12px 28px rgba(99,102,241,.22);
+    transition:var(--transition);
 }
 
-.register-card button:hover{
-    background:#1d4ed8;
+.register-btn span{
+    font-size:1.15rem;
+    transition:var(--transition);
 }
 
-.register-card button:disabled{
+.register-btn:hover:not(:disabled){
+    transform:translateY(-2px);
+    box-shadow:0 17px 32px rgba(99,102,241,.3);
+}
+
+.register-btn:hover:not(:disabled) span{
+    transform:translateX(4px);
+}
+
+.register-btn:disabled{
     opacity:.6;
-    cursor:not-allowed;
 }
 
-.error{
-    background:#fee2e2;
-    color:#dc2626;
-    padding:10px;
-    border-radius:8px;
-    margin-bottom:15px;
+.register-divider{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin:24px 0 18px;
+    color:#64748b;
+    font-size:.8rem;
+}
+
+.register-divider::before,
+.register-divider::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:var(--border);
+}
+
+.login-text{
+    margin:0;
     text-align:center;
+    color:var(--muted);
+    font-size:.86rem;
 }
 
 .login-text span{
-    color:#2563eb;
+    margin-left:6px;
+    color:#a5b4fc;
+    font-weight:700;
     cursor:pointer;
-    margin-left:5px;
-    font-weight:600;
+    transition:var(--transition);
+}
+
+.login-text span:hover{
+    color:#c4b5fd;
+}
+
+@media(max-width:500px){
+
+    .register-container{
+        min-height:calc(100vh - 120px);
+        padding:20px 14px;
+    }
+
+    .register-card{
+        padding:30px 22px;
+        border-radius:20px;
+    }
+
+    .register-header h1{
+        font-size:1.95rem;
+    }
+
 }

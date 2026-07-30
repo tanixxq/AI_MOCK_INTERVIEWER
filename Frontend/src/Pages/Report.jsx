@@ -11,7 +11,6 @@ const Report=()=>{
     const [report,setReport]=useState(null);
     const [loading,setLoading]=useState(true);
 
-
     useEffect(()=>{
 
         const fetchReport=async()=>{
@@ -24,7 +23,7 @@ const Report=()=>{
 
             }catch(error){
 
-                console.log(error);
+                console.log("Fetch Report Error:",error);
 
             }finally{
 
@@ -34,19 +33,18 @@ const Report=()=>{
 
         };
 
-
         fetchReport();
 
     },[id]);
 
 
-
     if(loading){
 
         return(
-            <h2>
-                Loading Report...
-            </h2>
+            <main className="report-loading">
+                <div className="report-spinner"></div>
+                <p>Generating your report...</p>
+            </main>
         );
 
     }
@@ -55,130 +53,309 @@ const Report=()=>{
     if(!report){
 
         return(
-            <h2>
-                Report not found
-            </h2>
+            <main className="report-error">
+                <div className="report-error-icon">
+                    !
+                </div>
+
+                <h2>
+                    Report not found
+                </h2>
+
+                <p>
+                    We couldn't find the interview report you're looking for.
+                </p>
+
+                <button
+                    onClick={()=>navigate("/dashboard")}
+                >
+                    Back to Dashboard
+                </button>
+            </main>
         );
 
     }
 
 
+    const score=Number(report.overallScore)||0;
+
+    const scorePercentage=Math.min(
+        Math.max(score,0),
+        10
+    )*10;
+
 
     return(
 
-        <div className="report-container">
+        <main className="report-container">
 
-            <div className="report-card">
-
-
-                <h1>
-                    Interview Report 📊
-                </h1>
+            <div className="report-glow report-glow-one"></div>
+            <div className="report-glow report-glow-two"></div>
 
 
+            <div className="report-page">
 
-                <div className="score-card">
+                <header className="report-header">
 
-                    <h2>
-                        Overall Score
-                    </h2>
+                    <div>
 
+                        <span className="report-badge">
+                            INTERVIEW COMPLETED
+                        </span>
 
-                    <span>
-                        {report.overallScore || 0}/10
-                    </span>
+                        <h1>
+                            Your Interview Report
+                        </h1>
 
-                </div>
+                        <p>
+                            Here's how you performed and where you can improve.
+                        </p>
 
-
-
-
-                <div className="summary-section">
-
-                    <h2>
-                        Summary
-                    </h2>
+                    </div>
 
 
-                    <p>
-                        {report.summary || "No summary available"}
-                    </p>
+                    <button
+                        className="dashboard-btn"
+                        onClick={()=>navigate("/dashboard")}
+                    >
+                        Dashboard
+                    </button>
 
-                </div>
-
-
-
-
-                <div className="section">
-
-                    <h2>
-                        💪 Strengths
-                    </h2>
+                </header>
 
 
-                    <ul>
+                <section className="report-top">
 
-                        {
-                            report.strengths?.map((item,index)=>(
+                    <div className="score-card">
 
-                                <li key={index}>
-                                    {item}
+                        <div className="score-ring">
+
+                            <div className="score-ring-inner">
+
+                                <strong>
+                                    {score}
+                                </strong>
+
+                                <span>
+                                    /10
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div className="score-details">
+
+                            <span className="score-label">
+                                OVERALL SCORE
+                            </span>
+
+                            <h2>
+                                {score>=8
+                                    ?"Excellent Performance"
+                                    :score>=6
+                                        ?"Good Performance"
+                                        :"Keep Practicing"
+                                }
+                            </h2>
+
+                            <p>
+                                Your overall interview performance based
+                                on the AI evaluation.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div className="summary-card">
+
+                        <span className="section-eyebrow">
+                            AI SUMMARY
+                        </span>
+
+                        <h2>
+                            Performance Overview
+                        </h2>
+
+                        <p>
+                            {report.summary || "No summary available."}
+                        </p>
+
+                    </div>
+
+                </section>
+
+
+                <section className="feedback-grid">
+
+
+                    <div className="feedback-card strengths-card">
+
+                        <div className="feedback-heading">
+
+                            <div className="feedback-icon">
+                                ✓
+                            </div>
+
+                            <div>
+                                <span>
+                                    WHAT YOU DID WELL
+                                </span>
+
+                                <h2>
+                                    Strengths
+                                </h2>
+                            </div>
+
+                        </div>
+
+
+                        <ul>
+
+                            {
+                                report.strengths?.length
+                                ?
+                                report.strengths.map(
+                                    (item,index)=>(
+                                        <li key={index}>
+                                            <span>✓</span>
+                                            {item}
+                                        </li>
+                                    )
+                                )
+                                :
+                                <li>
+                                    <span>✓</span>
+                                    No strengths available.
                                 </li>
+                            }
 
-                            ))
-                        }
+                        </ul>
 
-                    </ul>
-
-                </div>
+                    </div>
 
 
 
+                    <div className="feedback-card improvements-card">
+
+                        <div className="feedback-heading">
+
+                            <div className="feedback-icon">
+                                ↑
+                            </div>
+
+                            <div>
+                                <span>
+                                    WHERE TO IMPROVE
+                                </span>
+
+                                <h2>
+                                    Improvements
+                                </h2>
+                            </div>
+
+                        </div>
 
 
-                <div className="section">
+                        <ul>
 
-                    <h2>
-                        🚀 Improvements
-                    </h2>
-
-
-                    <ul>
-
-                        {
-                            report.improvements?.map((item,index)=>(
-
-                                <li key={index}>
-                                    {item}
+                            {
+                                report.improvements?.length
+                                ?
+                                report.improvements.map(
+                                    (item,index)=>(
+                                        <li key={index}>
+                                            <span>→</span>
+                                            {item}
+                                        </li>
+                                    )
+                                )
+                                :
+                                <li>
+                                    <span>→</span>
+                                    No improvement suggestions available.
                                 </li>
+                            }
 
-                            ))
-                        }
+                        </ul>
 
-                    </ul>
+                    </div>
+
+                </section>
+
+
+                <section className="performance-bar-card">
+
+                    <div className="performance-heading">
+
+                        <div>
+
+                            <span className="section-eyebrow">
+                                PERFORMANCE
+                            </span>
+
+                            <h2>
+                                Overall Score
+                            </h2>
+
+                        </div>
+
+                        <strong>
+                            {score}/10
+                        </strong>
+
+                    </div>
+
+
+                    <div className="performance-track">
+
+                        <div
+                            className="performance-fill"
+                            style={{
+                                width:`${scorePercentage}%`
+                            }}
+                        ></div>
+
+                    </div>
+
+                    <div className="performance-labels">
+                        <span>Needs Improvement</span>
+                        <span>Good</span>
+                        <span>Excellent</span>
+                    </div>
+
+                </section>
+
+
+                <div className="report-actions">
+
+                    <button
+                        className="secondary-btn"
+                        onClick={()=>navigate("/dashboard")}
+                    >
+                        Back to Dashboard
+                    </button>
+
+
+                    <button
+                        className="primary-btn"
+                        onClick={()=>navigate("/create-interview")}
+                    >
+                        Take Another Interview
+                        <span>→</span>
+                    </button>
 
                 </div>
-
-
-
-
-                <button
-                    onClick={()=>navigate("/dashboard")}
-                >
-
-                    Back to Dashboard
-
-                </button>
-
-
 
             </div>
 
-        </div>
+        </main>
 
     );
 
 };
-
 
 export default Report;
