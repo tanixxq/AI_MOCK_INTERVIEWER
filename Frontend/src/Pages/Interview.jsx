@@ -26,6 +26,11 @@ const Interview=()=>{
                 const response=await API.get(`/interviews/${id}`);
                 const currentInterview=response.data.interview;
 
+                if(currentInterview.status==="Completed"){
+                    navigate(`/report/${currentInterview._id}`,{replace:true});
+                    return;
+                }
+
                 setInterview(currentInterview);
 
                 const savedAnswers=currentInterview.questions.map(
@@ -42,7 +47,7 @@ const Interview=()=>{
         };
 
         fetchInterview();
-    },[id]);
+    },[id,navigate]);
 
     useEffect(()=>{
         if(!interview||!id||answer===answers[currentQuestion]){
@@ -127,7 +132,7 @@ const Interview=()=>{
                 }
             );
 
-            navigate(`/report/${response.data.interview._id}`);
+            navigate(`/report/${response.data.interview._id}`,{replace:true});
         }catch(error){
             console.log("Finish Interview Error:",error);
             alert("Failed to finish interview");
@@ -183,9 +188,7 @@ const Interview=()=>{
             <section className="interview-card">
                 <div className="interview-header">
                     <div>
-                        <span className="interview-badge">
-                            LIVE AI INTERVIEW
-                        </span>
+                        <span className="interview-badge">LIVE AI INTERVIEW</span>
                         <h1>Technical Interview</h1>
                     </div>
 
@@ -210,16 +213,11 @@ const Interview=()=>{
                 </div>
 
                 <div className="interview-meta">
-                    <span className="skill-label">
-                        Skills
-                    </span>
+                    <span className="skill-label">Skills</span>
 
                     <div className="skill-list">
                         {interview.skills.map((skill,index)=>(
-                            <span
-                                className="skill-tag"
-                                key={index}
-                            >
+                            <span className="skill-tag" key={index}>
                                 {skill}
                             </span>
                         ))}
@@ -238,9 +236,7 @@ const Interview=()=>{
 
                 <div className="answer-section">
                     <div className="answer-header">
-                        <label htmlFor="answer">
-                            Your Answer
-                        </label>
+                        <label htmlFor="answer">Your Answer</label>
 
                         <span className="save-status">
                             {savingAnswer
@@ -287,9 +283,7 @@ const Interview=()=>{
                         }
 
                         {!submitting&&(
-                            <span className="button-arrow">
-                                →
-                            </span>
+                            <span className="button-arrow">→</span>
                         )}
                     </button>
                 </div>
