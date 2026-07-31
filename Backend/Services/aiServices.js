@@ -16,7 +16,7 @@ const parseJson=response=>{
     try{
         return JSON.parse(content.trim());
     }catch(error){
-        console.error("AI JSON Parse Error:",content);
+        console.error("AI JSON Parse Error:",error.message);
         throw new Error("AI returned invalid JSON");
     }
 };

@@ -49,7 +49,7 @@ export const register=async(req,res)=>{
 
     }catch(error){
 
-        console.log("Registration Error:",error);
+        console.error("Registration Error:",error.message);
 
         res.status(500).json({
             message:"Error registering user"

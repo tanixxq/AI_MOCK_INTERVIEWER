@@ -23,7 +23,6 @@ const Report=()=>{
 
             }catch(error){
 
-                console.log("Fetch Report Error:",error);
 
             }finally{
 

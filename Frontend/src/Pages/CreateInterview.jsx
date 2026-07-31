@@ -58,7 +58,7 @@ const CreateInterview=()=>{
 
             navigate(`/interview/${interview._id}`);
         }catch(error){
-            console.log("Create Interview Error:",error);
+            
 
             alert(
                 error.response?.data?.message||

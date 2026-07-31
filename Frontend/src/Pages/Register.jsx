@@ -36,8 +36,8 @@ const Register=()=>{
                 formData
             );
 
-            console.log("REGISTER RESPONSE:",response.data);
-            console.log("REGISTER TOKEN:",response.data.token);
+            
+            
 
             localStorage.setItem(
                 "token",
@@ -47,8 +47,6 @@ const Register=()=>{
             navigate("/dashboard");
 
         }catch(error){
-
-            console.log(error);
 
             setError(
                 error.response?.data?.message ||

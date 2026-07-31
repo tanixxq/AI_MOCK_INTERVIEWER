@@ -44,7 +44,6 @@ const Login=()=>{
 
         }catch(error){
 
-            console.log(error);
 
             setError(
                 error.response?.data?.message ||

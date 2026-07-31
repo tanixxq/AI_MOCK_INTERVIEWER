@@ -4,18 +4,14 @@ import API from "../Services/api.js";
 import "./Dashboard.css";
 
 const Dashboard=()=>{
-
     const navigate=useNavigate();
-
     const [user,setUser]=useState(null);
     const [interviews,setInterviews]=useState([]);
     const [loading,setLoading]=useState(true);
     const [showAll,setShowAll]=useState(false);
 
     useEffect(()=>{
-
         const fetchDashboard=async()=>{
-
             const token=localStorage.getItem("token");
 
             if(!token){
@@ -24,77 +20,57 @@ const Dashboard=()=>{
             }
 
             try{
-
                 const userResponse=await API.get("/auth/me");
                 const interviewResponse=await API.get("/interviews/my");
 
                 setUser(
-                    userResponse.data.user ||
+                    userResponse.data.user||
                     userResponse.data
                 );
 
                 setInterviews(
-                    interviewResponse.data.interviews || []
+                    interviewResponse.data.interviews||[]
                 );
-
             }catch(error){
-
-                console.log(
-                    "Dashboard Error:",
-                    error
-                );
-
                 if(
-                    error.response?.status===401 ||
+                    error.response?.status===401||
                     error.response?.status===403
                 ){
-
                     localStorage.removeItem("token");
                     navigate("/login");
-
                 }
-
             }finally{
-
                 setLoading(false);
-
             }
-
         };
 
         fetchDashboard();
-
     },[navigate]);
 
-
     const totalInterviews=interviews.length;
-
 
     const averageScore=totalInterviews
         ?
         (
             interviews.reduce(
-                (total,interview)=>total+(interview.overallScore || 0),
+                (total,interview)=>total+(interview.overallScore||0),
                 0
             )/totalInterviews
         ).toFixed(1)
         :
         "—";
 
-
     const uniqueSkills=[
         ...new Set(
             interviews.flatMap(
-                interview=>interview.skills || []
+                interview=>interview.skills||[]
             )
         )
     ];
 
-
     const visibleInterviews=showAll
         ?interviews
         :interviews.slice(0,5);
-
 
     const formatDate=(date)=>{
         if(!date){
@@ -111,25 +87,18 @@ const Dashboard=()=>{
         );
     };
 
-
     return(
-
         <main className="dashboard-container">
-
             <div className="dashboard-content">
-
-
                 <section className="welcome-card">
-
                     <div className="welcome-content">
-
                         <div className="status-badge">
                             <span className="status-dot"></span>
                             AI Interviewer is ready
                         </div>
 
                         <h1>
-                            Welcome back, {user?.name || "Developer"} 👋
+                            Welcome back, {user?.name||"Developer"} 👋
                         </h1>
 
                         <p>
@@ -144,24 +113,14 @@ const Dashboard=()=>{
                         >
                             Start New Interview
                         </button>
-
                     </div>
-
                 </section>
 
-
-
                 <section className="stats-container">
-
-
                     <div className="stat-card stat-primary">
-
-                        <div className="stat-icon">
-                            🎯
-                        </div>
+                        <div className="stat-icon">🎯</div>
 
                         <div className="stat-content">
-
                             <span className="stat-label">
                                 Total Interviews
                             </span>
@@ -169,21 +128,13 @@ const Dashboard=()=>{
                             <p>
                                 {loading?"...":totalInterviews}
                             </p>
-
                         </div>
-
                     </div>
 
-
-
                     <div className="stat-card stat-success">
-
-                        <div className="stat-icon">
-                            📈
-                        </div>
+                        <div className="stat-icon">📈</div>
 
                         <div className="stat-content">
-
                             <span className="stat-label">
                                 Average Score
                             </span>
@@ -197,21 +148,13 @@ const Dashboard=()=>{
                                         :`${averageScore}/10`
                                 }
                             </p>
-
                         </div>
-
                     </div>
 
-
-
                     <div className="stat-card stat-accent">
-
-                        <div className="stat-icon">
-                            ⚡
-                        </div>
+                        <div className="stat-icon">⚡</div>
 
                         <div className="stat-content">
-
                             <span className="stat-label">
                                 Skills Practiced
                             </span>
@@ -219,39 +162,25 @@ const Dashboard=()=>{
                             <p>
                                 {loading?"...":uniqueSkills.length}
                             </p>
-
                         </div>
-
                     </div>
-
                 </section>
 
-
-
                 <section className="recent-card">
-
-
                     <div className="recent-header">
-
                         <div>
-
                             <span className="section-eyebrow">
                                 YOUR ACTIVITY
                             </span>
 
-                            <h2>
-                                Interview History
-                            </h2>
+                            <h2>Interview History</h2>
 
                             <p>
                                 Review your previous interview performance.
                             </p>
-
                         </div>
 
-
-                        {interviews.length>5 && (
-
+                        {interviews.length>5&&(
                             <button
                                 className="view-all-btn"
                                 onClick={()=>setShowAll(!showAll)}
@@ -261,32 +190,20 @@ const Dashboard=()=>{
                                     :"View All"
                                 }
                             </button>
-
                         )}
-
                     </div>
 
-
-
-                    {loading ? (
-
+                    {loading?(
                         <div className="empty-state">
-
                             <div className="loading-spinner"></div>
 
                             <p>
                                 Loading interview history...
                             </p>
-
                         </div>
-
-                    ) : interviews.length===0 ? (
-
+                    ):interviews.length===0?(
                         <div className="empty-state">
-
-                            <div className="empty-icon">
-                                ✨
-                            </div>
+                            <div className="empty-icon">✨</div>
 
                             <h3>
                                 Your interview history starts here
@@ -303,30 +220,20 @@ const Dashboard=()=>{
                             >
                                 Take Your First Interview
                             </button>
-
                         </div>
-
-                    ) : (
-
+                    ):(
                         <div className="interview-history">
-
                             {visibleInterviews.map((interview)=>(
-
                                 <div
                                     className="history-item"
                                     key={interview._id}
                                 >
-
-
                                     <div className="history-info">
-
                                         <h3>
                                             {interview.skills?.join(" + ")}
                                         </h3>
 
-
                                         <div className="history-meta">
-
                                             <span>
                                                 {interview.difficulty}
                                             </span>
@@ -337,19 +244,14 @@ const Dashboard=()=>{
 
                                             <span>
                                                 {formatDate(
-                                                    interview.completedAt ||
+                                                    interview.completedAt||
                                                     interview.createdAt
                                                 )}
                                             </span>
-
                                         </div>
-
                                     </div>
 
-
-
                                     <div className="history-score">
-
                                         <strong>
                                             {interview.overallScore}/10
                                         </strong>
@@ -363,26 +265,15 @@ const Dashboard=()=>{
                                         >
                                             View Report →
                                         </button>
-
                                     </div>
-
-
                                 </div>
-
                             ))}
-
                         </div>
-
                     )}
-
                 </section>
-
             </div>
-
         </main>
-
     );
-
 };
 
 export default Dashboard;

@@ -69,7 +69,7 @@ export const createInterview=async(req,res)=>{
         });
 
     }catch(error){
-        console.log("Create Interview Error:",error);
+        console.error("Create Interview Error:",error.message);
 
         res.status(500).json({
             message:"Error creating interview"
@@ -90,7 +90,7 @@ export const getMyInterviews=async(req,res)=>{
 
         res.status(200).json({interviews});
     }catch(error){
-        console.log("My Interviews Error:",error);
+        console.error("My Interviews Error:",error.message);
 
         res.status(500).json({
             message:"Error fetching interview history"
@@ -121,7 +121,7 @@ export const getInterviewById=async(req,res)=>{
 
         res.status(200).json({interview});
     }catch(error){
-        console.log("Get Interview Error:",error);
+        console.error("Get Interview Error:",error.message);
 
         res.status(500).json({
             message:"Error fetching interview"
@@ -197,7 +197,7 @@ export const saveAnswer=async(req,res)=>{
             message:"Answer saved successfully"
         });
     }catch(error){
-        console.log("Save Answer Error:",error);
+        console.error("Save Answer Error:",error.message);
 
         res.status(500).json({
             message:"Error saving answer"
@@ -295,7 +295,7 @@ export const finishInterview=async(req,res)=>{
             interview
         });
     }catch(error){
-        console.log("Finish Interview Error:",error);
+        console.error("Finish Interview Error:",error.message);
 
         res.status(500).json({
             message:"Error completing interview"

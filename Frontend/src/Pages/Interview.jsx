@@ -40,7 +40,6 @@ const Interview=()=>{
                 setAnswers(savedAnswers);
                 setAnswer(savedAnswers[0]||"");
             }catch(error){
-                console.log("Fetch Interview Error:",error);
             }finally{
                 setLoading(false);
             }
@@ -69,7 +68,6 @@ const Interview=()=>{
 
                 setAnswerSaved(true);
             }catch(error){
-                console.log("Auto Save Error:",error);
             }finally{
                 setSavingAnswer(false);
             }
@@ -89,7 +87,6 @@ const Interview=()=>{
             );
             return true;
         }catch(error){
-            console.log("Save Answer Error:",error);
             return false;
         }
     };
@@ -134,7 +131,6 @@ const Interview=()=>{
 
             navigate(`/report/${response.data.interview._id}`,{replace:true});
         }catch(error){
-            console.log("Finish Interview Error:",error);
             alert("Failed to finish interview");
         }finally{
             setSubmitting(false);
