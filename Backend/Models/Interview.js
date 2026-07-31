@@ -60,6 +60,11 @@ const interviewSchema=new mongoose.Schema(
             type:Boolean,
             default:false
         },
+        type:{
+            type:String,
+            enum:["Technical","Behavioural"],
+            required:true
+        },
 
         questions:[
             {

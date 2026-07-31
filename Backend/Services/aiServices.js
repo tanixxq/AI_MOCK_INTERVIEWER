@@ -47,7 +47,10 @@ const validateEvaluation=(data,questionCount)=>{
         throw new Error("Invalid evaluation response");
     }
 
-    if(!Array.isArray(data.questions)||data.questions.length!==questionCount){
+    if(
+        !Array.isArray(data.questions)||
+        data.questions.length!==questionCount
+    ){
         throw new Error("AI evaluation question count mismatch");
     }
 
@@ -100,29 +103,52 @@ const validateEvaluation=(data,questionCount)=>{
 export const generateInterviewQuestions=async(
     skills,
     difficulty,
-    experience
+    experience,
+    type
 )=>{
     try{
         if(
             !Array.isArray(skills)||
-            skills.length===0||
             !difficulty||
-            !experience
+            !experience||
+            !["Technical","Behavioural"].includes(type)
         ){
             throw new Error("Invalid interview generation input");
         }
 
-        const prompt=`
-Generate exactly 10 technical interview questions.
+        const skillText=skills.length
+            ?skills.join(", ")
+            :"Not applicable";
 
-Skills: ${skills.join(", ")}
+        const prompt=`
+Generate exactly 10 interview questions.
+
+Interview Type: ${type}
+Skills: ${skillText}
 Difficulty: ${difficulty}
 Experience: ${experience}
 
-Rules:
-- Questions must be relevant to the provided skills.
-- Match the requested difficulty.
-- Match the candidate's experience level.
+${type==="Technical"
+?`
+Technical Interview Rules:
+- Ask technical questions relevant to the provided skills.
+- Questions may cover programming, coding, APIs, databases, frameworks, debugging, architecture, or problem solving.
+- Include coding-oriented questions when appropriate.
+- Match the difficulty to the candidate's experience.
+- Do not ask behavioural or HR-style questions.
+`
+:`
+Behavioural Interview Rules:
+- Ask behavioural and situational interview questions.
+- Focus on communication, teamwork, conflict resolution, leadership, adaptability, failure, motivation, ownership, and problem solving.
+- Use realistic workplace scenarios.
+- Do not ask coding, programming, database, API, or framework questions.
+- Questions should encourage the candidate to explain real experiences or hypothetical workplace situations.
+`}
+
+General Rules:
+- Return exactly 10 questions.
+- Questions must be clear and interview-ready.
 - Return JSON only.
 - Return exactly this structure:
 {
@@ -138,7 +164,7 @@ Rules:
             messages:[
                 {
                     role:"system",
-                    content:"You are an expert technical interviewer. Return only valid JSON."
+                    content:"You are an expert technical and behavioural interviewer. Return only valid JSON."
                 },
                 {
                     role:"user",
@@ -156,7 +182,11 @@ Rules:
         return validateQuestions(data);
 
     }catch(error){
-        console.error("Groq Question Generation Error:",error.message);
+        console.error(
+            "Groq Question Generation Error:",
+            error.message
+        );
+
         throw new Error("Failed to generate interview questions");
     }
 };
@@ -168,7 +198,7 @@ export const evaluateInterview=async(questions)=>{
         }
 
         const prompt=`
-You are an experienced technical interviewer.
+You are an experienced technical and behavioural interviewer.
 
 Evaluate the complete interview below.
 
@@ -178,6 +208,7 @@ ${JSON.stringify(questions)}
 For every question:
 - Give a score from 0 to 10.
 - Give detailed constructive feedback.
+- Evaluate the response based on clarity, relevance, correctness, reasoning, communication, and depth where appropriate.
 
 Then provide:
 - overallScore from 0 to 10
@@ -211,7 +242,7 @@ Return ONLY valid JSON in exactly this structure:
             messages:[
                 {
                     role:"system",
-                    content:"You are an expert technical interviewer. Return only valid JSON."
+                    content:"You are an expert interviewer. Return only valid JSON."
                 },
                 {
                     role:"user",
@@ -232,7 +263,11 @@ Return ONLY valid JSON in exactly this structure:
         );
 
     }catch(error){
-        console.error("Groq Evaluation Error:",error.message);
+        console.error(
+            "Groq Evaluation Error:",
+            error.message
+        );
+
         throw new Error("Failed to evaluate interview");
     }
 };

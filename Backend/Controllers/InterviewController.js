@@ -2,47 +2,78 @@ import mongoose from "mongoose";
 import {Interview} from "../Models/Interview.js";
 import {generateInterviewQuestions,evaluateInterview} from "../Services/aiServices.js";
 
-
 export const createInterview=async(req,res)=>{
     try{
-        const {skills,experience,difficulty}=req.body;
+        const {type,skills,experience,difficulty}=req.body;
 
-        if(!Array.isArray(skills)||skills.length===0){
-            return res.status(400).json({message:"At least one skill is required"});
+        if(!["Technical","Behavioural"].includes(type)){
+            return res.status(400).json({
+                message:"Invalid interview type"
+            });
         }
 
-        const cleanedSkills=[...new Set(
-            skills
-                .filter(skill=>typeof skill==="string")
-                .map(skill=>skill.trim())
-                .filter(Boolean)
-        )];
+        const cleanedSkills=Array.isArray(skills)
+            ?[...new Set(
+                skills
+                    .filter(skill=>typeof skill==="string")
+                    .map(skill=>skill.trim())
+                    .filter(Boolean)
+            )]
+            :[];
 
-        if(cleanedSkills.length===0){
-            return res.status(400).json({message:"Valid skills are required"});
+        if(type==="Technical"&&cleanedSkills.length===0){
+            return res.status(400).json({
+                message:"At least one skill is required for a technical interview"
+            });
         }
 
         if(cleanedSkills.length>10){
-            return res.status(400).json({message:"You can select up to 10 skills"});
+            return res.status(400).json({
+                message:"You can select up to 10 skills"
+            });
         }
 
-        if(typeof experience!=="string"||!experience.trim()){
-            return res.status(400).json({message:"Experience is required"});
+        if(
+            typeof experience!=="string"||
+            !experience.trim()
+        ){
+            return res.status(400).json({
+                message:"Experience is required"
+            });
+        }
+
+        const cleanedExperience=experience.trim();
+
+        if(cleanedExperience.length>200){
+            return res.status(400).json({
+                message:"Experience must be 200 characters or less"
+            });
         }
 
         if(!["Easy","Medium","Hard"].includes(difficulty)){
-            return res.status(400).json({message:"Invalid difficulty"});
+            return res.status(400).json({
+                message:"Invalid difficulty"
+            });
         }
 
-        const questions=await generateInterviewQuestions(
-            cleanedSkills,
-            difficulty,
-            experience.trim()
-        );
+        let questions;
 
-        if(!Array.isArray(questions)||questions.length===0){
+        try{
+            questions=await generateInterviewQuestions(
+                cleanedSkills,
+                difficulty,
+                cleanedExperience,
+                type
+            );
+        }catch(error){
             return res.status(502).json({
-                message:"AI failed to generate interview questions"
+                message:"AI service failed to generate interview questions"
+            });
+        }
+
+        if(!Array.isArray(questions)||questions.length!==10){
+            return res.status(502).json({
+                message:"AI failed to generate valid interview questions"
             });
         }
 
@@ -55,8 +86,9 @@ export const createInterview=async(req,res)=>{
 
         const interview=new Interview({
             userId:req.user.id,
+            type,
             skills:cleanedSkills,
-            experience:experience.trim(),
+            experience:cleanedExperience,
             difficulty,
             questions:formattedQuestions
         });
@@ -67,7 +99,6 @@ export const createInterview=async(req,res)=>{
             message:"Interview created successfully",
             interview
         });
-
     }catch(error){
         console.error("Create Interview Error:",error.message);
 
@@ -85,7 +116,7 @@ export const getMyInterviews=async(req,res)=>{
         })
         .sort({completedAt:-1,createdAt:-1})
         .select(
-            "_id skills experience difficulty overallScore summary status completedAt createdAt"
+            "_id type skills experience difficulty overallScore summary status completedAt createdAt"
         );
 
         res.status(200).json({interviews});
@@ -246,12 +277,18 @@ export const finishInterview=async(req,res)=>{
         }
 
         const cleanedAnswers=answers.map(answer=>
-            typeof answer==="string"?answer.trim():""
+            typeof answer==="string"
+                ?answer.trim()
+                :""
         );
 
-        if(cleanedAnswers.some(answer=>!answer)){
+        if(
+            cleanedAnswers.some(
+                answer=>!answer||answer.length>10000
+            )
+        ){
             return res.status(400).json({
-                message:"All questions must have an answer"
+                message:"Each answer must be between 1 and 10000 characters"
             });
         }
 
@@ -259,7 +296,15 @@ export const finishInterview=async(req,res)=>{
             interview.questions[index].answer=answer;
         });
 
-        const report=await evaluateInterview(interview.questions);
+        let report;
+
+        try{
+            report=await evaluateInterview(interview.questions);
+        }catch(error){
+            return res.status(502).json({
+                message:"AI service failed to evaluate the interview"
+            });
+        }
 
         if(
             !report||
