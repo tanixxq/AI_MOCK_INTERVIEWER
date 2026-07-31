@@ -18,7 +18,7 @@ app.use(cors({
     credentials:true
 }));
 
-app.use(express.json());
+app.use(express.json({limit:"1mb"}));
 
 app.use("/api/auth",AuthRoutes);
 app.use("/api/users",UserRoutes);
@@ -33,7 +33,19 @@ app.get("/api/health",(req,res)=>{
 
 app.use((req,res)=>{
     res.status(404).json({
+        success:false,
         message:"Route not found"
+    });
+});
+
+app.use((error,req,res,next)=>{
+    console.error("Unhandled Server Error:",error.message);
+
+    res.status(error.status||500).json({
+        success:false,
+        message:error.status
+            ?error.message
+            :"Internal server error"
     });
 });
 
