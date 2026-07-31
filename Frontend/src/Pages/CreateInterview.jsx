@@ -5,6 +5,7 @@ import "./CreateInterview.css";
 
 const CreateInterview=()=>{
     const navigate=useNavigate();
+    const [type,setType]=useState("Technical");
     const [skills,setSkills]=useState("");
     const [experience,setExperience]=useState("");
     const [difficulty,setDifficulty]=useState("Easy");
@@ -18,18 +19,23 @@ const CreateInterview=()=>{
                 .filter(Boolean)
         )];
 
-        if(cleanedSkills.length===0){
+        if(type==="Technical"&&cleanedSkills.length===0){
             alert("Please enter at least one skill");
             return;
         }
 
-        if(cleanedSkills.length>10){
+        if(type==="Technical"&&cleanedSkills.length>10){
             alert("You can enter up to 10 skills");
             return;
         }
 
         if(!experience.trim()){
             alert("Please enter your experience");
+            return;
+        }
+
+        if(!["Technical","Behavioural"].includes(type)){
+            alert("Please select a valid interview type");
             return;
         }
 
@@ -44,6 +50,7 @@ const CreateInterview=()=>{
             const response=await API.post(
                 "/interviews",
                 {
+                    type,
                     skills:cleanedSkills,
                     experience:experience.trim(),
                     difficulty
@@ -58,8 +65,6 @@ const CreateInterview=()=>{
 
             navigate(`/interview/${interview._id}`);
         }catch(error){
-            
-
             alert(
                 error.response?.data?.message||
                 error.message||
@@ -81,27 +86,73 @@ const CreateInterview=()=>{
                     <h1>Build Your Interview</h1>
 
                     <p>
-                        Choose your skills, experience, and difficulty.
-                        Our AI will generate a personalized technical interview.
+                        Choose your interview type, experience, and difficulty.
+                        Our AI will generate a personalized interview.
                     </p>
                 </div>
 
                 <div className="create-interview-form">
                     <div className="form-group">
-                        <label htmlFor="skills">Skills</label>
+                        <label>Interview Type</label>
 
-                        <input
-                            id="skills"
-                            type="text"
-                            placeholder="React, Node.js, MongoDB"
-                            value={skills}
-                            onChange={(e)=>setSkills(e.target.value)}
-                        />
+                        <div className="interview-type-selector">
+                            <button
+                                type="button"
+                                className={`type-card ${
+                                    type==="Technical"
+                                        ?"active"
+                                        :""
+                                }`}
+                                onClick={()=>setType("Technical")}
+                            >
+                                <span className="type-card-icon">💻</span>
 
-                        <span className="field-hint">
-                            Separate multiple skills with commas.
-                        </span>
+                                <span className="type-card-content">
+                                    <strong>Technical</strong>
+                                    <small>
+                                        Coding, concepts, APIs & technical skills
+                                    </small>
+                                </span>
+                            </button>
+
+                            <button
+                                type="button"
+                                className={`type-card ${
+                                    type==="Behavioural"
+                                        ?"active"
+                                        :""
+                                }`}
+                                onClick={()=>setType("Behavioural")}
+                            >
+                                <span className="type-card-icon">💬</span>
+
+                                <span className="type-card-content">
+                                    <strong>Behavioural</strong>
+                                    <small>
+                                        Communication, teamwork & situations
+                                    </small>
+                                </span>
+                            </button>
+                        </div>
                     </div>
+
+                    {type==="Technical"&&(
+                        <div className="form-group">
+                            <label htmlFor="skills">Skills</label>
+
+                            <input
+                                id="skills"
+                                type="text"
+                                placeholder="React, Node.js, MongoDB"
+                                value={skills}
+                                onChange={(e)=>setSkills(e.target.value)}
+                            />
+
+                            <span className="field-hint">
+                                Separate multiple skills with commas.
+                            </span>
+                        </div>
+                    )}
 
                     <div className="form-group">
                         <label htmlFor="experience">Experience</label>
