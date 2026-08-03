@@ -10,6 +10,8 @@ const Report=()=>{
 
     const [report,setReport]=useState(null);
     const [loading,setLoading]=useState(true);
+    const [error,setError]=useState(false);
+
 
     useEffect(()=>{
 
@@ -23,6 +25,12 @@ const Report=()=>{
 
             }catch(error){
 
+                console.error(
+                    "Fetch Report Error:",
+                    error.message
+                );
+
+                setError(true);
 
             }finally{
 
@@ -41,8 +49,42 @@ const Report=()=>{
 
         return(
             <main className="report-loading">
+
                 <div className="report-spinner"></div>
-                <p>Generating your report...</p>
+
+                <p>
+                    Generating your report...
+                </p>
+
+            </main>
+        );
+
+    }
+
+
+    if(error){
+
+        return(
+            <main className="report-error">
+
+                <div className="report-error-icon">
+                    !
+                </div>
+
+                <h2>
+                    Unable to load report
+                </h2>
+
+                <p>
+                    Something went wrong while fetching your interview analysis.
+                </p>
+
+                <button
+                    onClick={()=>navigate("/dashboard")}
+                >
+                    Back to Dashboard
+                </button>
+
             </main>
         );
 
@@ -53,6 +95,7 @@ const Report=()=>{
 
         return(
             <main className="report-error">
+
                 <div className="report-error-icon">
                     !
                 </div>
@@ -70,6 +113,7 @@ const Report=()=>{
                 >
                     Back to Dashboard
                 </button>
+
             </main>
         );
 
@@ -78,10 +122,10 @@ const Report=()=>{
 
     const score=Number(report.overallScore)||0;
 
-    const scorePercentage=Math.min(
-        Math.max(score,0),
-        10
-    )*10;
+    const isTechnical=report.type==="Technical";
+
+    const scorePercentage=
+        Math.min(Math.max(score,0),10)*10;
 
 
     return(
@@ -94,6 +138,7 @@ const Report=()=>{
 
             <div className="report-page">
 
+
                 <header className="report-header">
 
                     <div>
@@ -102,13 +147,32 @@ const Report=()=>{
                             INTERVIEW COMPLETED
                         </span>
 
+
                         <h1>
-                            Your Interview Report
+
+                            {
+                                isTechnical
+                                ?
+                                "💻 Technical Interview Report"
+                                :
+                                "💬 Behavioural Interview Report"
+                            }
+
                         </h1>
 
+
                         <p>
-                            Here's how you performed and where you can improve.
+
+                            {
+                                isTechnical
+                                ?
+                                "Your technical knowledge, problem-solving ability, and skills were evaluated."
+                                :
+                                "Your communication, teamwork, and workplace behaviour were evaluated."
+                            }
+
                         </p>
+
 
                     </div>
 
@@ -120,14 +184,83 @@ const Report=()=>{
                         Dashboard
                     </button>
 
+
                 </header>
+
 
 
                 <section className="report-top">
 
+
+                    <div className="interview-info-card">
+
+
+                        <span className="section-eyebrow">
+                            INTERVIEW DETAILS
+                        </span>
+
+
+                        <h2>
+                            {report.type} Interview
+                        </h2>
+
+
+
+                        {
+                            isTechnical && report.skills?.length>0 &&
+
+                            <div className="skill-list">
+
+                                {
+                                    report.skills.map(
+                                        (skill,index)=>(
+
+                                            <span
+                                                key={index}
+                                                className="skill-tag"
+                                            >
+                                                {skill}
+                                            </span>
+
+                                        )
+                                    )
+                                }
+
+                            </div>
+
+                        }
+
+
+
+                        <div className="report-meta">
+
+                            <span>
+                                Difficulty: {report.difficulty || "N/A"}
+                            </span>
+
+
+                            <span>
+                                Experience: {report.experience || "N/A"}
+                            </span>
+
+
+                        </div>
+
+
+                    </div>
+
+
+
+
                     <div className="score-card">
 
-                        <div className="score-ring">
+
+                        <div
+                            className="score-ring"
+                            style={{
+                                "--score":scorePercentage
+                            }}
+                        >
 
                             <div className="score-ring-inner">
 
@@ -144,48 +277,71 @@ const Report=()=>{
                         </div>
 
 
+
+
                         <div className="score-details">
+
 
                             <span className="score-label">
                                 OVERALL SCORE
                             </span>
 
+
                             <h2>
-                                {score>=8
-                                    ?"Excellent Performance"
-                                    :score>=6
-                                        ?"Good Performance"
-                                        :"Keep Practicing"
+
+                                {
+                                    score>=8
+                                    ?
+                                    "Excellent Performance"
+                                    :
+                                    score>=6
+                                    ?
+                                    "Good Performance"
+                                    :
+                                    "Keep Practicing"
                                 }
+
                             </h2>
 
+
                             <p>
-                                Your overall interview performance based
-                                on the AI evaluation.
+                                Your overall interview performance based on the AI evaluation.
                             </p>
 
+
                         </div>
+
 
                     </div>
 
 
+
+
                     <div className="summary-card">
+
 
                         <span className="section-eyebrow">
                             AI SUMMARY
                         </span>
 
+
                         <h2>
                             Performance Overview
                         </h2>
+
 
                         <p>
                             {report.summary || "No summary available."}
                         </p>
 
+
                     </div>
 
+
                 </section>
+
+
+
 
 
                 <section className="feedback-grid">
@@ -193,23 +349,29 @@ const Report=()=>{
 
                     <div className="feedback-card strengths-card">
 
+
                         <div className="feedback-heading">
 
                             <div className="feedback-icon">
                                 ✓
                             </div>
 
+
                             <div>
+
                                 <span>
                                     WHAT YOU DID WELL
                                 </span>
 
+
                                 <h2>
                                     Strengths
                                 </h2>
+
                             </div>
 
                         </div>
+
 
 
                         <ul>
@@ -219,26 +381,43 @@ const Report=()=>{
                                 ?
                                 report.strengths.map(
                                     (item,index)=>(
+
                                         <li key={index}>
-                                            <span>✓</span>
+
+                                            <span>
+                                                ✓
+                                            </span>
+
                                             {item}
+
                                         </li>
+
                                     )
                                 )
                                 :
                                 <li>
-                                    <span>✓</span>
+
+                                    <span>
+                                        ✓
+                                    </span>
+
                                     No strengths available.
+
                                 </li>
+
                             }
 
                         </ul>
+
 
                     </div>
 
 
 
+
+
                     <div className="feedback-card improvements-card">
+
 
                         <div className="feedback-heading">
 
@@ -246,17 +425,25 @@ const Report=()=>{
                                 ↑
                             </div>
 
+
                             <div>
+
                                 <span>
                                     WHERE TO IMPROVE
                                 </span>
 
+
                                 <h2>
                                     Improvements
                                 </h2>
+
+
                             </div>
 
+
                         </div>
+
+
 
 
                         <ul>
@@ -266,29 +453,49 @@ const Report=()=>{
                                 ?
                                 report.improvements.map(
                                     (item,index)=>(
+
                                         <li key={index}>
-                                            <span>→</span>
+
+                                            <span>
+                                                →
+                                            </span>
+
                                             {item}
+
                                         </li>
+
                                     )
                                 )
                                 :
                                 <li>
-                                    <span>→</span>
+
+                                    <span>
+                                        →
+                                    </span>
+
                                     No improvement suggestions available.
+
                                 </li>
+
                             }
 
                         </ul>
 
+
                     </div>
+
 
                 </section>
 
 
+
+
+
                 <section className="performance-bar-card">
 
+
                     <div className="performance-heading">
+
 
                         <div>
 
@@ -296,20 +503,28 @@ const Report=()=>{
                                 PERFORMANCE
                             </span>
 
+
                             <h2>
                                 Overall Score
                             </h2>
 
+
                         </div>
+
+
 
                         <strong>
                             {score}/10
                         </strong>
 
+
                     </div>
 
 
+
+
                     <div className="performance-track">
+
 
                         <div
                             className="performance-fill"
@@ -318,18 +533,40 @@ const Report=()=>{
                             }}
                         ></div>
 
+
                     </div>
 
+
+
+
                     <div className="performance-labels">
-                        <span>Needs Improvement</span>
-                        <span>Good</span>
-                        <span>Excellent</span>
+
+                        <span>
+                            Needs Improvement
+                        </span>
+
+
+                        <span>
+                            Good
+                        </span>
+
+
+                        <span>
+                            Excellent
+                        </span>
+
+
                     </div>
+
 
                 </section>
 
 
+
+
+
                 <div className="report-actions">
+
 
                     <button
                         className="secondary-btn"
@@ -339,22 +576,32 @@ const Report=()=>{
                     </button>
 
 
+
+
                     <button
                         className="primary-btn"
                         onClick={()=>navigate("/create-interview")}
                     >
                         Take Another Interview
-                        <span>→</span>
+
+                        <span>
+                            →
+                        </span>
+
                     </button>
+
 
                 </div>
 
+
             </div>
+
 
         </main>
 
     );
 
 };
+
 
 export default Report;
