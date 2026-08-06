@@ -4,41 +4,46 @@ const useSpeechRecognition=()=>{
 
     const [text,setText]=useState("");
     const [listening,setListening]=useState(false);
+    const [completed,setCompleted]=useState(false);
 
     const recognitionRef=useRef(null);
-
+    const silenceTimer=useRef(null);
+    const textRef=useRef("");
 
     useEffect(()=>{
 
-        const SpeechRecognition =
+        const SpeechRecognition=
             window.SpeechRecognition ||
             window.webkitSpeechRecognition;
 
 
         if(!SpeechRecognition){
-
-            console.error(
-                "Speech recognition is not supported in this browser"
-            );
-
+            console.error("Speech recognition not supported");
             return;
-
         }
 
 
         const recognition=new SpeechRecognition();
 
-
         recognition.continuous=true;
-
         recognition.interimResults=true;
-
         recognition.lang="en-US";
+
+
+        recognition.onstart=()=>{
+
+            console.log("🎤 Listening started");
+
+            setListening(true);
+            setCompleted(false);
+
+        };
 
 
         recognition.onresult=(event)=>{
 
-            let transcript="";
+            let finalTranscript="";
+            let interimTranscript="";
 
 
             for(
@@ -47,21 +52,54 @@ const useSpeechRecognition=()=>{
                 i++
             ){
 
-                transcript +=
-                event.results[i][0].transcript;
+                const transcript=
+                    event.results[i][0].transcript;
+
+
+                if(event.results[i].isFinal){
+
+                    finalTranscript+=transcript;
+
+                }else{
+
+                    interimTranscript+=transcript;
+
+                }
 
             }
 
 
-            setText(transcript);
+            if(finalTranscript){
 
-        };
+                textRef.current += finalTranscript;
+
+                setText(textRef.current);
 
 
+                console.log(
+                    "Final:",
+                    textRef.current
+                );
 
-        recognition.onstart=()=>{
 
-            setListening(true);
+                clearTimeout(
+                    silenceTimer.current
+                );
+
+
+                silenceTimer.current=setTimeout(()=>{
+
+                    console.log(
+                        "User finished speaking"
+                    );
+
+
+                    recognition.stop();
+
+
+                },3000);
+
+            }
 
         };
 
@@ -69,7 +107,19 @@ const useSpeechRecognition=()=>{
 
         recognition.onend=()=>{
 
+            console.log(
+                "🎤 Listening ended"
+            );
+
+
             setListening(false);
+
+
+            if(textRef.current.trim()){
+
+                setCompleted(true);
+
+            }
 
         };
 
@@ -79,7 +129,7 @@ const useSpeechRecognition=()=>{
 
             console.log(
                 "Speech error:",
-                error
+                error.error
             );
 
             setListening(false);
@@ -90,6 +140,16 @@ const useSpeechRecognition=()=>{
         recognitionRef.current=recognition;
 
 
+        return()=>{
+
+            recognition.stop();
+
+            clearTimeout(
+                silenceTimer.current
+            );
+
+        };
+
 
     },[]);
 
@@ -97,12 +157,22 @@ const useSpeechRecognition=()=>{
 
     const startListening=()=>{
 
-        if(
-            recognitionRef.current &&
-            !listening
-        ){
+        textRef.current="";
+        setText("");
+        setCompleted(false);
 
-            recognitionRef.current.start();
+
+        if(recognitionRef.current){
+
+            try{
+
+                recognitionRef.current.start();
+
+            }catch(error){
+
+                console.log(error);
+
+            }
 
         }
 
@@ -121,11 +191,11 @@ const useSpeechRecognition=()=>{
     };
 
 
-
     return{
         text,
         setText,
         listening,
+        completed,
         startListening,
         stopListening
     };

@@ -10,6 +10,7 @@ const Interview=()=>{
     const navigate=useNavigate();
 
     const [interview,setInterview]=useState(null);
+    const [spokenQuestion,setSpokenQuestion]=useState(false);
     const [loading,setLoading]=useState(true);
     const [answer,setAnswer]=useState("");
     const [answers,setAnswers]=useState([]);
@@ -17,6 +18,7 @@ const Interview=()=>{
     const [submitting,setSubmitting]=useState(false);
     const [savingAnswer,setSavingAnswer]=useState(false);
     const [answerSaved,setAnswerSaved]=useState(false);
+    const [reviewing,setReviewing]=useState(false);
 
     const {
         text,
@@ -31,11 +33,6 @@ const Interview=()=>{
 
         const fetchInterview=async()=>{
 
-            if(!id){
-                setLoading(false);
-                return;
-            }
-
             try{
 
                 const response=await API.get(`/interviews/${id}`);
@@ -44,10 +41,14 @@ const Interview=()=>{
 
 
                 if(currentInterview.status==="Completed"){
-                    navigate(`/report/${currentInterview._id}`,{
-                        replace:true
-                    });
+
+                    navigate(
+                        `/report/${currentInterview._id}`,
+                        {replace:true}
+                    );
+
                     return;
+
                 }
 
 
@@ -60,7 +61,6 @@ const Interview=()=>{
 
 
                 setAnswers(savedAnswers);
-                setAnswer(savedAnswers[0]||"");
 
 
             }catch(error){
@@ -72,6 +72,7 @@ const Interview=()=>{
                 setLoading(false);
 
             }
+
         };
 
 
@@ -83,127 +84,151 @@ const Interview=()=>{
 
     const speakQuestion=(question)=>{
 
-        window.speechSynthesis.cancel();
-
-
+        console.log("Speaking:",question);
+    
+    
         const speech=new SpeechSynthesisUtterance(question);
-
-
+    
+    
         speech.rate=0.9;
         speech.pitch=1;
-
-
-        speech.onend=()=>{
-
-            setText("");
-            startListening();
-
+        speech.volume=1;
+    
+    
+        const voices=window.speechSynthesis.getVoices();
+    
+        if(voices.length){
+    
+            speech.voice=voices.find(
+                voice=>voice.lang.includes("en")
+            ) || voices[0];
+    
+        }
+    
+    
+        speech.onstart=()=>{
+    
+            console.log("AI started speaking");
+    
         };
-
-
-        window.speechSynthesis.speak(speech);
-
+    
+    
+        speech.onend=()=>{
+    
+            console.log("AI finished speaking");
+    
+    
+            setText("");
+    
+            startListening();
+    
+        };
+    
+    
+        speech.onerror=(error)=>{
+    
+            console.log("Speech error:",error);
+    
+        };
+    
+    
+        setTimeout(()=>{
+    
+            window.speechSynthesis.speak(speech);
+    
+        },500);
+    
     };
-
-
 
     useEffect(()=>{
 
-        if(interview){
-
+        if(interview && !spokenQuestion){
+    
+            setSpokenQuestion(true);
+    
             speakQuestion(
                 interview.questions[currentQuestion].question
             );
-
+    
         }
-
-    },[interview,currentQuestion]);
+    
+    },[interview,currentQuestion,spokenQuestion]);
 
 
 
     useEffect(()=>{
 
-        if(text){
+        if(!listening && text.trim()){
 
-            setAnswer(text);
+            handleAnswerFinished(text);
 
         }
 
-    },[text]);
+    },[listening]);
 
 
 
-    useEffect(()=>{
+    const handleAnswerFinished=async(transcript)=>{
 
-        if(!interview||!id||answer===answers[currentQuestion]){
-            return;
-        }
+        stopListening();
 
 
-        const timer=setTimeout(async()=>{
-
-            try{
-
-                setSavingAnswer(true);
-                setAnswerSaved(false);
+        setAnswer(transcript);
 
 
-                await API.patch(
-                    `/interviews/${id}/answers`,
-                    {
-                        questionIndex:currentQuestion,
-                        answer
-                    }
-                );
+        setReviewing(true);
 
 
-                setAnswerSaved(true);
-
-
-            }catch(error){
-
-                console.log(error);
-
-            }finally{
-
-                setSavingAnswer(false);
-
-            }
-
-        },800);
-
-
-        return()=>clearTimeout(timer);
-
-
-    },[
-        answer,
-        currentQuestion,
-        interview,
-        id,
-        answers
-    ]);
-
-
-
-    const saveCurrentAnswer=async()=>{
 
         try{
+
+            const updatedAnswers=[...answers];
+
+            updatedAnswers[currentQuestion]=transcript;
+
+
+            setAnswers(updatedAnswers);
+
+
 
             await API.patch(
                 `/interviews/${id}/answers`,
                 {
                     questionIndex:currentQuestion,
-                    answer
+                    answer:transcript
                 }
             );
 
-            return true;
+
+
+            const feedback=
+            "Good answer. Try adding more technical explanation and practical examples. Let's move to the next question.";
+
+
+
+            const speech=new SpeechSynthesisUtterance(feedback);
+
+
+            speech.rate=0.9;
+
+
+            speech.onend=()=>{
+
+                setReviewing(false);
+
+
+                moveNext(updatedAnswers);
+
+            };
+
+
+            window.speechSynthesis.speak(speech);
+
 
 
         }catch(error){
 
-            return false;
+            console.log(error);
 
         }
 
@@ -211,54 +236,17 @@ const Interview=()=>{
 
 
 
-    const nextQuestion=async()=>{
+    const moveNext=(updatedAnswers)=>{
 
 
-        if(answer.trim()===""){
-
-            alert("Please answer the question.");
-            return;
-
-        }
-
-
-        stopListening();
-
-
-        const updatedAnswers=[...answers];
-
-        updatedAnswers[currentQuestion]=answer;
-
-
-        setAnswers(updatedAnswers);
-
-
-
-        const saved=await saveCurrentAnswer();
-
-
-
-        if(!saved){
-
-            alert("Could not save your answer.");
-            return;
-
-        }
-
-
-
-        if(currentQuestion<interview.questions.length-1){
+        if(currentQuestion < interview.questions.length-1){
 
 
             const nextIndex=currentQuestion+1;
 
 
             setCurrentQuestion(nextIndex);
-
-
-            setAnswer(
-                updatedAnswers[nextIndex]||""
-            );
+            setSpokenQuestion(false);
 
 
             setText("");
@@ -266,9 +254,10 @@ const Interview=()=>{
             setAnswerSaved(false);
 
 
+
         }else{
 
-            await finishInterview(updatedAnswers);
+            finishInterview(updatedAnswers);
 
         }
 
@@ -301,8 +290,7 @@ const Interview=()=>{
 
         }catch(error){
 
-            alert("Failed to finish interview");
-
+            console.log(error);
 
         }finally{
 
@@ -317,10 +305,17 @@ const Interview=()=>{
     if(loading){
 
         return(
+
             <div className="interview-loading">
+
                 <div className="loading-spinner"></div>
-                <p>Preparing your interview...</p>
+
+                <p>
+                    Preparing your interview...
+                </p>
+
             </div>
+
         );
 
     }
@@ -330,23 +325,31 @@ const Interview=()=>{
     if(!interview){
 
         return(
+
             <div className="interview-message">
-                <h2>Interview not found</h2>
+
+                <h2>
+                    Interview not found
+                </h2>
+
             </div>
+
         );
 
     }
 
 
 
-    const question=interview.questions[currentQuestion];
+    const question=
+    interview.questions[currentQuestion];
 
 
-    const totalQuestions=interview.questions.length;
+    const totalQuestions=
+    interview.questions.length;
 
-    const progress=((currentQuestion+1)/totalQuestions)*100;
 
-    const isLastQuestion=currentQuestion===totalQuestions-1;
+    const progress=
+    ((currentQuestion+1)/totalQuestions)*100;
 
 
 
@@ -358,7 +361,9 @@ const Interview=()=>{
             <section className="interview-card">
 
 
+
                 <div className="interview-header">
+
 
                     <div>
 
@@ -371,7 +376,9 @@ const Interview=()=>{
                             Technical Interview
                         </h1>
 
+
                     </div>
+
 
 
                     <div className="question-counter">
@@ -389,7 +396,9 @@ const Interview=()=>{
 
 
 
+
                 <div className="progress-section">
+
 
                     <div className="progress-info">
 
@@ -409,11 +418,15 @@ const Interview=()=>{
 
                     <div className="progress-track">
 
+
                         <div
+
                             className="progress-bar"
+
                             style={{
                                 width:`${progress}%`
                             }}
+
                         />
 
 
@@ -424,11 +437,17 @@ const Interview=()=>{
 
 
 
+
+
                 <div className="question-section">
 
+
                     <span className="question-label">
+
                         QUESTION {currentQuestion+1}
+
                     </span>
+
 
 
                     <h2 className="question">
@@ -442,49 +461,36 @@ const Interview=()=>{
 
 
 
-                <div className="answer-section">
 
 
-                    <div className="answer-header">
-
-                        <label>
-                            Your Answer
-                        </label>
+                <div className="voice-status">
 
 
-                        <span>
+                    {
 
-                            {
-                                listening
-                                ?
-                                "🎤 Listening..."
-                                :
-                                "🔊 AI Speaking..."
-                            }
+                        reviewing
 
-                        </span>
+                        ?
 
+                        "🤖 Reviewing your answer..."
 
-                    </div>
+                        :
 
+                        listening
 
+                        ?
 
-                    <textarea
+                        "🎤 Listening..."
 
-                        className="answer-box"
+                        :
 
-                        value={answer}
+                        "🔊 AI Speaking..."
 
-                        readOnly
-
-                        placeholder="Speak your answer..."
-
-                        rows="7"
-
-                    />
+                    }
 
 
                 </div>
+
 
 
 
@@ -493,44 +499,9 @@ const Interview=()=>{
 
                     <span className="question-tip">
 
-                        {
-                            isLastQuestion
-                            ?
-                            "Final question"
-                            :
-                            "Answer to continue"
-                        }
+                        AI will automatically continue after your answer.
 
                     </span>
-
-
-
-                    <button
-
-                        className="submit-btn"
-
-                        onClick={nextQuestion}
-
-                        disabled={
-                            submitting||savingAnswer
-                        }
-
-                    >
-
-                        {
-                            submitting
-                            ?
-                            "Generating Report..."
-                            :
-                            isLastQuestion
-                            ?
-                            "Finish Interview"
-                            :
-                            "Next Question"
-                        }
-
-
-                    </button>
 
 
                 </div>
